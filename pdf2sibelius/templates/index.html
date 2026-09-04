@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>PDF &rarr; Sibelius</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main>
+    <h1>PDF-Noten &rarr; Sibelius (MusicXML)</h1>
+    <p class="sub">Wandelt eine PDF-Partitur per Noten-Erkennung (Audiveris/OMR) in eine
+       MusicXML-Datei um, die sich direkt in Sibelius &ouml;ffnen l&auml;sst.</p>
+
+    <section id="step-upload" class="card">
+      <h2>1. PDF hochladen</h2>
+      <form id="upload-form">
+        <input type="file" id="pdf-input" accept="application/pdf" required>
+        <button type="submit">Seiten laden</button>
+      </form>
+      <p id="upload-error" class="error" hidden></p>
+    </section>
+
+    <section id="step-pages" class="card" hidden>
+      <h2>2. Notenseiten ausw&auml;hlen</h2>
+      <p class="hint">Seiten ohne Notenlinien (Titelblatt, Impressum, Inhaltsverzeichnis)
+         bitte abw&auml;hlen &ndash; sie w&uuml;rden die Erkennung abbrechen lassen.</p>
+      <div id="page-grid" class="page-grid"></div>
+      <button id="convert-btn">Umwandlung starten</button>
+    </section>
+
+    <section id="step-progress" class="card" hidden>
+      <h2>3. Umwandlung l&auml;uft&hellip;</h2>
+      <div id="spinner" class="spinner"></div>
+      <pre id="log-tail"></pre>
+      <p id="convert-error" class="error" hidden></p>
+    </section>
+
+    <section id="step-done" class="card" hidden>
+      <h2>4. Fertig</h2>
+      <p>Die MusicXML-Datei ist bereit. In Sibelius &uuml;ber
+         <em>Datei &rarr; &Ouml;ffnen</em> importieren.</p>
+      <a id="download-link" href="#" download>
+        <button>Ergebnis herunterladen (.mxl)</button>
+      </a>
+      <div id="warnings-box" hidden>
+        <h3>Bitte pr&uuml;fen</h3>
+        <ul id="warnings-list"></ul>
+      </div>
+      <button id="restart-btn" class="secondary">Weitere Datei umwandeln</button>
+    </section>
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
