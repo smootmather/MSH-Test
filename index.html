@@ -376,6 +376,59 @@
     color:#374151;
     box-shadow: 0 6px 0 #D1D5DB;
   }
+  .stats-link-btn{
+    margin-top:12px;
+    padding:13px;
+    font-size:1rem;
+  }
+
+  /* --- Stats screen --- */
+  .stats-intro{
+    text-align:center;
+    color:#6B7280;
+    font-weight:600;
+    font-size:0.9rem;
+    margin:-6px 0 16px;
+  }
+  .stats-empty{
+    text-align:center;
+    color:#6B7280;
+    font-weight:600;
+    padding:30px 10px;
+  }
+  .stats-list{
+    max-height:380px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:18px;
+    padding-right:2px;
+  }
+  .stat-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    border-radius:14px;
+    border:2px solid;
+  }
+  .stat-row-problem{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1rem;
+  }
+  .stat-row-meta{
+    font-size:0.78rem;
+    font-weight:700;
+    text-align:right;
+    white-space:nowrap;
+  }
+  .stat-bad{ background:#FEF2F2; border-color:#FECACA; color:#991B1B; }
+  .stat-mid{ background:#FFFBEB; border-color:#FDE68A; color:#92400E; }
+  .stat-good{ background:#F0FDF4; border-color:#BBF7D0; color:#166534; }
+  .stat-new{ background:#F3F4F6; border-color:#E5E7EB; color:#4B5563; }
 
   footer{
     text-align:center;
@@ -420,6 +473,7 @@
       </div>
 
       <button class="start-btn" id="startBtn">🚀 Los geht's!</button>
+      <button class="start-btn secondary-btn stats-link-btn" id="statsBtn">📊 Statistik ansehen</button>
 
       <div class="best-row" id="bestRow"></div>
     </section>
@@ -438,7 +492,7 @@
         <div class="problem" id="problemText">7 × 8</div>
       </div>
 
-      <input type="number" inputmode="numeric" class="answer-input" id="answerInput" placeholder="?" autocomplete="off">
+      <input type="text" inputmode="none" class="answer-input" id="answerInput" placeholder="?" autocomplete="off" maxlength="3">
 
       <div class="keypad" id="keypad">
         <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
@@ -467,6 +521,17 @@
         <button class="start-btn secondary-btn" id="menuBtn">🏠 Menü</button>
         <button class="start-btn" id="retryBtn">🔁 Nochmal</button>
       </div>
+    </section>
+
+    <!-- STATS SCREEN -->
+    <section class="section" id="screen-stats">
+      <h2 class="result-title">📊 Deine Statistik</h2>
+      <p class="stats-intro">🔴 noch üben · 🟡 wird besser · 🟢 sitzt schon gut</p>
+      <div class="stats-empty" id="statsEmpty" style="display:none;">
+        Noch keine Aufgaben gelöst.<br>Starte eine Runde, dann siehst du hier deinen Fortschritt! 🚀
+      </div>
+      <div class="stats-list" id="statsList"></div>
+      <button class="start-btn secondary-btn" id="statsBackBtn">🏠 Zurück zum Menü</button>
     </section>
   </div>
   <footer>Viel Spaß beim Üben! 💪🧠</footer>
@@ -514,6 +579,7 @@
     start: document.getElementById('screen-start'),
     game: document.getElementById('screen-game'),
     result: document.getElementById('screen-result'),
+    stats: document.getElementById('screen-stats'),
   };
   function showScreen(name){
     Object.values(screens).forEach(s=>s.classList.remove('active'));
@@ -563,6 +629,109 @@
   document.getElementById('time-chips').addEventListener('click', renderBestRow);
   document.getElementById('diff-chips').addEventListener('click', renderBestRow);
 
+  // ---------- Per-problem stats (localStorage) ----------
+  // Drives both the adaptive question weighting and the stats screen.
+  const STATS_KEY = 'einmaleins_blitz_problemstats_v1';
+  function loadStats(){
+    try{ return JSON.parse(localStorage.getItem(STATS_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function saveStats(){
+    try{ localStorage.setItem(STATS_KEY, JSON.stringify(problemStats)); }catch(e){}
+  }
+  let problemStats = loadStats();
+
+  function statKey(a, b){
+    const lo = Math.min(a,b), hi = Math.max(a,b);
+    return lo + 'x' + hi;
+  }
+  function recordAttempt(a, b, correct, timeMs){
+    const key = statKey(a,b);
+    if(!problemStats[key]) problemStats[key] = { attempts:0, correct:0, wrong:0, totalTimeMs:0 };
+    const s = problemStats[key];
+    s.attempts++;
+    if(correct) s.correct++; else s.wrong++;
+    s.totalTimeMs += timeMs;
+    saveStats();
+  }
+
+  // Weight a problem by how long it typically takes to answer (and how often
+  // it's missed): slower/wrong problems get asked more often, fast ones less.
+  function comboWeight(key){
+    const s = problemStats[key];
+    let seconds;
+    if(!s || s.attempts === 0){
+      seconds = 4; // unseen problems: moderate frequency so they get tried
+    } else {
+      seconds = (s.totalTimeMs / s.attempts) / 1000;
+      seconds = Math.min(Math.max(seconds, 0.5), 15);
+    }
+    let weight = seconds;
+    if(s && s.attempts > 0){
+      const wrongRate = s.wrong / s.attempts;
+      weight *= (1 + wrongRate * 2);
+    }
+    weight = Math.max(weight, 0.8); // floor: even mastered problems still show up sometimes
+    weight *= (0.85 + Math.random()*0.3); // jitter so it's not too predictable
+    return weight;
+  }
+
+  function pickWeightedCombo(lo, hi, excludeKey){
+    const combos = [];
+    for(let i=lo;i<=hi;i++){
+      for(let j=i;j<=hi;j++){
+        combos.push([i,j]);
+      }
+    }
+    const weights = combos.map(([i,j])=>{
+      const key = i+'x'+j;
+      if(excludeKey && key === excludeKey && combos.length > 1) return 0;
+      return comboWeight(key);
+    });
+    const total = weights.reduce((a,b)=>a+b, 0);
+    if(total <= 0){ return combos[randInt(0, combos.length-1)]; }
+    let r = Math.random() * total;
+    for(let k=0;k<combos.length;k++){
+      r -= weights[k];
+      if(r <= 0) return combos[k];
+    }
+    return combos[combos.length-1];
+  }
+
+  function renderStats(){
+    const entries = Object.entries(problemStats).map(([key, s])=>{
+      const [a,b] = key.split('x').map(Number);
+      const avgSec = s.attempts ? (s.totalTimeMs / s.attempts / 1000) : 0;
+      const wrongRate = s.attempts ? (s.wrong / s.attempts) : 0;
+      const accuracy = s.attempts ? Math.round((s.correct/s.attempts)*100) : 0;
+      const needScore = avgSec * (1 + wrongRate*2) + wrongRate*5;
+      return { a, b, attempts:s.attempts, avgSec, accuracy, wrongRate, needScore };
+    });
+    entries.sort((x,y)=> y.needScore - x.needScore);
+
+    const listEl = document.getElementById('statsList');
+    const emptyEl = document.getElementById('statsEmpty');
+    if(entries.length === 0){
+      emptyEl.style.display = 'block';
+      listEl.innerHTML = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.innerHTML = entries.map(e=>{
+      let badge, cls;
+      if(e.attempts < 2){ badge='🆕'; cls='stat-new'; }
+      else if(e.avgSec > 5 || e.wrongRate > 0.3){ badge='🔴'; cls='stat-bad'; }
+      else if(e.avgSec > 2.5 || e.wrongRate > 0.1){ badge='🟡'; cls='stat-mid'; }
+      else { badge='🟢'; cls='stat-good'; }
+      return '<div class="stat-row '+cls+'">'
+        + '<div class="stat-row-problem">'+badge+' '+e.a+' × '+e.b+' = '+(e.a*e.b)+'</div>'
+        + '<div class="stat-row-meta">'+e.avgSec.toFixed(1)+'s · '+e.accuracy+'% · '+e.attempts+'x</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  document.getElementById('statsBtn').addEventListener('click', ()=>{ renderStats(); showScreen('stats'); });
+  document.getElementById('statsBackBtn').addEventListener('click', ()=>{ showScreen('start'); });
+
   // ---------- Game logic ----------
   let timeLeft = 60;
   let totalTime = 60;
@@ -575,6 +744,8 @@
   let currentA = 0, currentB = 0, currentAnswer = 0;
   let misses = {}; // "a x b" -> count
   let running = false;
+  let lastComboKey = null;
+  let problemStartTime = 0;
 
   const timeVal = document.getElementById('timeVal');
   const scoreVal = document.getElementById('scoreVal');
@@ -589,11 +760,13 @@
 
   function newProblem(){
     const [lo, hi] = diffRanges[selectedDiff];
-    currentA = randInt(lo, hi);
-    currentB = randInt(lo, hi);
+    const [i, j] = pickWeightedCombo(lo, hi, lastComboKey);
+    if(Math.random() < 0.5){ currentA = i; currentB = j; } else { currentA = j; currentB = i; }
     currentAnswer = currentA * currentB;
+    lastComboKey = i + 'x' + j;
     problemText.textContent = currentA + ' × ' + currentB;
     answerInput.value = '';
+    problemStartTime = performance.now();
   }
 
   function flashFeedback(type){
@@ -615,6 +788,8 @@
     const raw = answerInput.value;
     if(raw === '' ) return;
     const val = parseInt(raw,10);
+    const elapsedMs = performance.now() - problemStartTime;
+    recordAttempt(currentA, currentB, val === currentAnswer, elapsedMs);
     if(val === currentAnswer){
       correctCount++;
       streak++;
@@ -717,29 +892,37 @@
     if(e.key === 'Enter'){ submitAnswer(); }
   });
 
+  // Auto-submit when the typed number reaches/exceeds the answer's digit length
+  // (kids often forget to press enter/✓) — only triggers on plausible full-length input.
+  function maybeAutoSubmit(){
+    const raw = answerInput.value;
+    if(raw.length >= String(currentAnswer).length && raw.length >= 1){
+      // small delay so it feels natural, not jumpy
+      clearTimeout(answerInput._autoTimer);
+      answerInput._autoTimer = setTimeout(()=>{
+        if(running && answerInput.value === raw){
+          submitAnswer();
+        }
+      }, 260);
+    }
+  }
+
   document.getElementById('keypad').addEventListener('click', (e)=>{
     const btn = e.target.closest('.key');
     if(!btn) return;
     const k = btn.dataset.k;
     if(k === 'enter'){ submitAnswer(); }
     else if(k === 'del'){ answerInput.value = answerInput.value.slice(0,-1); }
-    else { answerInput.value = (answerInput.value||'') + k; }
-    answerInput.focus();
+    else { answerInput.value = (answerInput.value||'') + k; maybeAutoSubmit(); }
   });
 
-  // Auto-submit when the typed number reaches/exceeds the answer's digit length
-  // (kids often forget to press enter) — only triggers on plausible full-length input.
   answerInput.addEventListener('input', ()=>{
-    const raw = answerInput.value;
-    if(raw.length >= String(currentAnswer).length && raw.length >= 1){
-      // small delay so it feels natural, not jumpy
-      clearTimeout(answerInput._autoTimer);
-      answerInput._autoTimer = setTimeout(()=>{
-        if(document.activeElement === answerInput && running){
-          submitAnswer();
-        }
-      }, 260);
+    // guard against non-digit input from a physical keyboard (type is "text"
+    // so the on-screen iPad keyboard stays hidden via inputmode="none")
+    if(/[^0-9]/.test(answerInput.value)){
+      answerInput.value = answerInput.value.replace(/[^0-9]/g,'');
     }
+    maybeAutoSubmit();
   });
 
 })();
