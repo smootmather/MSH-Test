@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>1x1 Blitz – Das Einmaleins-Rennen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#7C3AED;
+    --bg2:#EC4899;
+    --bg3:#F59E0B;
+    --card:#ffffff;
+    --ink:#231942;
+    --accent:#22C55E;
+    --accent-dark:#16A34A;
+    --danger:#EF4444;
+    --danger-dark:#B91C1C;
+    --blue:#3B82F6;
+    --yellow:#FBBF24;
+    --shadow: 0 10px 0 rgba(0,0,0,0.15);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Fredoka', sans-serif;
+    color:var(--ink);
+    background: radial-gradient(circle at 20% 20%, var(--bg3), transparent 45%),
+                radial-gradient(circle at 80% 10%, var(--bg2), transparent 40%),
+                radial-gradient(circle at 50% 90%, #06B6D4, transparent 45%),
+                linear-gradient(135deg, #4C1D95, #7C3AED 40%, #DB2777 100%);
+    background-attachment: fixed;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    overflow-x:hidden;
+  }
+
+  .stars{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .stars span{
+    position:absolute; font-size:22px; opacity:.35; animation: float 9s ease-in-out infinite;
+  }
+
+  @keyframes float{
+    0%,100%{ transform: translateY(0) rotate(0deg); }
+    50%{ transform: translateY(-24px) rotate(15deg); }
+  }
+
+  .app{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:480px;
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:28px;
+    padding:28px 24px 32px;
+    box-shadow: var(--shadow), 0 20px 50px rgba(0,0,0,0.35);
+    border:4px solid #ffffff55;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    text-align:center;
+    font-size:2.1rem;
+    margin:0 0 4px;
+    background: linear-gradient(90deg, #7C3AED, #EC4899, #F59E0B);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    letter-spacing:0.5px;
+  }
+  .subtitle{
+    text-align:center;
+    font-size:1rem;
+    color:#6B7280;
+    margin:0 0 22px;
+    font-weight:600;
+  }
+
+  /* --- Start Screen --- */
+  .section{ display:none; }
+  .section.active{ display:block; animation: pop .35s ease; }
+  @keyframes pop{ from{ opacity:0; transform: scale(.92);} to{opacity:1; transform:scale(1);} }
+
+  .field-label{
+    font-weight:700;
+    font-size:0.95rem;
+    color:#4C1D95;
+    margin: 16px 0 8px;
+  }
+
+  .chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chip{
+    flex:1 1 auto;
+    min-width:64px;
+    padding:12px 10px;
+    border-radius:14px;
+    border:3px solid #E5E7EB;
+    background:#F9FAFB;
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:0.95rem;
+    color:#374151;
+    cursor:pointer;
+    text-align:center;
+    transition: all .15s ease;
+    user-select:none;
+  }
+  .chip:hover{ transform: translateY(-2px); }
+  .chip.selected{
+    background: linear-gradient(135deg, #7C3AED, #EC4899);
+    border-color:#7C3AED;
+    color:#fff;
+    box-shadow: 0 6px 0 #5B21B6;
+    transform: translateY(-2px);
+  }
+
+  .start-btn{
+    margin-top:26px;
+    width:100%;
+    padding:18px;
+    border:none;
+    border-radius:18px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color:#fff;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.3rem;
+    letter-spacing:0.5px;
+    box-shadow: 0 6px 0 #15803D;
+    cursor:pointer;
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  .start-btn:active{ transform: translateY(4px); box-shadow: 0 2px 0 #15803D; }
+
+  .best-row{
+    display:flex;
+    justify-content:center;
+    gap:18px;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .best-pill{
+    background:#FEF3C7;
+    color:#92400E;
+    font-weight:700;
+    font-size:0.85rem;
+    padding:8px 14px;
+    border-radius:100px;
+    border:2px solid #FDE68A;
+  }
+
+  /* --- Game screen --- */
+  .hud{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .hud-box{
+    flex:1;
+    background:#F3F4F6;
+    border-radius:16px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .hud-box .val{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.4rem;
+    line-height:1;
+  }
+  .hud-box .lbl{
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:#6B7280;
+    font-weight:700;
+    margin-top:2px;
+  }
+  #hud-time.warn .val{ color:var(--danger); animation: shake .4s infinite; }
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    25%{ transform: translateX(-2px); }
+    75%{ transform: translateX(2px); }
+  }
+  #hud-score .val{ color:var(--accent-dark); }
+  #hud-streak .val{ color:#D97706; }
+
+  .timer-track{
+    height:14px;
+    background:#E5E7EB;
+    border-radius:100px;
+    overflow:hidden;
+    margin-bottom:22px;
+    border:2px solid #D1D5DB;
+  }
+  .timer-fill{
+    height:100%;
+    width:100%;
+    border-radius:100px;
+    background: linear-gradient(90deg, #22C55E, #FBBF24, #EF4444);
+    transition: width .12s linear;
+  }
+
+  .problem-card{
+    background: linear-gradient(135deg, #EEF2FF, #FDF4FF);
+    border-radius:22px;
+    padding:26px 10px;
+    text-align:center;
+    border:3px dashed #C4B5FD;
+    margin-bottom:20px;
+    position:relative;
+  }
+  .problem{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:3rem;
+    color:#312E81;
+    letter-spacing:1px;
+  }
+  .feedback-flash{
+    position:absolute;
+    inset:0;
+    border-radius:19px;
+    pointer-events:none;
+    opacity:0;
+  }
+  .feedback-flash.correct{ background:rgba(34,197,94,0.25); opacity:1; animation: fadeOut .5s ease forwards; }
+  .feedback-flash.wrong{ background:rgba(239,68,68,0.25); opacity:1; animation: fadeOut .5s ease forwards; }
+  @keyframes fadeOut{ to{ opacity:0; } }
+
+  .answer-input{
+    width:100%;
+    font-family:'Baloo 2', sans-serif;
+    font-size:2.2rem;
+    font-weight:800;
+    text-align:center;
+    padding:14px 10px;
+    border-radius:18px;
+    border:4px solid #A78BFA;
+    outline:none;
+    color:#312E81;
+    background:#fff;
+    -moz-appearance: textfield;
+  }
+  .answer-input::-webkit-outer-spin-button,
+  .answer-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .answer-input:focus{ border-color:#EC4899; box-shadow: 0 0 0 4px #EC489933; }
+
+  .keypad{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-top:14px;
+  }
+  .key{
+    padding:14px 0;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1.2rem;
+    border-radius:14px;
+    border:none;
+    background:#F3F4F6;
+    color:#312E81;
+    cursor:pointer;
+    box-shadow: 0 4px 0 #D1D5DB;
+  }
+  .key:active{ transform: translateY(3px); box-shadow:none; }
+  .key.wide{ grid-column:span 1; }
+  .key.enter{
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color:#fff;
+    box-shadow: 0 4px 0 #15803D;
+  }
+  .key.del{
+    background: linear-gradient(135deg, #F87171, var(--danger-dark));
+    color:#fff;
+    box-shadow: 0 4px 0 #991B1B;
+  }
+
+  /* --- Result screen --- */
+  .result-emoji{
+    text-align:center;
+    font-size:4rem;
+    margin-bottom:6px;
+  }
+  .result-title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    text-align:center;
+    font-size:1.6rem;
+    margin:0 0 18px;
+    color:#4C1D95;
+  }
+  .stats-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .stat{
+    background:#F9FAFB;
+    border-radius:16px;
+    padding:14px;
+    text-align:center;
+    border:2px solid #F3F4F6;
+  }
+  .stat .num{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.6rem;
+    color:#7C3AED;
+  }
+  .stat .lbl{
+    font-size:0.75rem;
+    color:#6B7280;
+    font-weight:700;
+    margin-top:2px;
+  }
+  .new-best{
+    text-align:center;
+    background: linear-gradient(135deg,#FDE68A,#FBBF24);
+    border-radius:14px;
+    padding:10px;
+    font-weight:800;
+    color:#78350F;
+    margin-bottom:16px;
+    animation: pop .4s ease;
+  }
+  .miss-list{
+    background:#FEF2F2;
+    border:2px solid #FECACA;
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:18px;
+    font-size:0.9rem;
+    color:#991B1B;
+    max-height:120px;
+    overflow-y:auto;
+  }
+  .miss-list strong{ display:block; margin-bottom:6px; }
+  .btn-row{ display:flex; gap:10px; }
+  .btn-row .start-btn{ margin-top:0; }
+  .secondary-btn{
+    flex:1;
+    background:#F3F4F6;
+    color:#374151;
+    box-shadow: 0 6px 0 #D1D5DB;
+  }
+
+  footer{
+    text-align:center;
+    color:#ffffffcc;
+    font-size:0.8rem;
+    margin-top:14px;
+    font-weight:600;
+  }
+
+  @media (max-width:360px){
+    .title{ font-size:1.7rem; }
+    .problem{ font-size:2.4rem; }
+    .answer-input{ font-size:1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="app">
+  <div class="card">
+    <h1 class="title">⚡ 1x1 Blitz ⚡</h1>
+    <p class="subtitle" id="subtitleText">Das Einmaleins-Rennen auf Zeit!</p>
+
+    <!-- START SCREEN -->
+    <section class="section active" id="screen-start">
+      <div class="field-label">🎯 Wähle deine Zeit</div>
+      <div class="chip-row" id="time-chips">
+        <div class="chip" data-time="30">30 Sek</div>
+        <div class="chip selected" data-time="60">60 Sek</div>
+        <div class="chip" data-time="90">90 Sek</div>
+        <div class="chip" data-time="120">120 Sek</div>
+      </div>
+
+      <div class="field-label">🔥 Schwierigkeit</div>
+      <div class="chip-row" id="diff-chips">
+        <div class="chip" data-diff="easy">Einfach<br><small>1–5</small></div>
+        <div class="chip selected" data-diff="medium">Mittel<br><small>1–10</small></div>
+        <div class="chip" data-diff="hard">Profi<br><small>1–12</small></div>
+      </div>
+
+      <button class="start-btn" id="startBtn">🚀 Los geht's!</button>
+
+      <div class="best-row" id="bestRow"></div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section class="section" id="screen-game">
+      <div class="hud">
+        <div class="hud-box" id="hud-time"><div class="val" id="timeVal">60</div><div class="lbl">Sekunden</div></div>
+        <div class="hud-box" id="hud-score"><div class="val" id="scoreVal">0</div><div class="lbl">Punkte</div></div>
+        <div class="hud-box" id="hud-streak"><div class="val" id="streakVal">0</div><div class="lbl">Serie</div></div>
+      </div>
+      <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+
+      <div class="problem-card">
+        <div class="feedback-flash" id="flash"></div>
+        <div class="problem" id="problemText">7 × 8</div>
+      </div>
+
+      <input type="number" inputmode="numeric" class="answer-input" id="answerInput" placeholder="?" autocomplete="off">
+
+      <div class="keypad" id="keypad">
+        <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+        <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+        <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+        <button class="key del" data-k="del">⌫</button><button class="key" data-k="0">0</button><button class="key enter" data-k="enter">✓</button>
+      </div>
+    </section>
+
+    <!-- RESULT SCREEN -->
+    <section class="section" id="screen-result">
+      <div class="result-emoji" id="resultEmoji">🏆</div>
+      <h2 class="result-title" id="resultTitle">Super gemacht!</h2>
+      <div class="new-best" id="newBestBanner" style="display:none;">🌟 Neuer Highscore! 🌟</div>
+      <div class="stats-grid">
+        <div class="stat"><div class="num" id="statScore">0</div><div class="lbl">Punkte</div></div>
+        <div class="stat"><div class="num" id="statCorrect">0</div><div class="lbl">Richtig</div></div>
+        <div class="stat"><div class="num" id="statBestStreak">0</div><div class="lbl">Beste Serie</div></div>
+        <div class="stat"><div class="num" id="statAccuracy">0%</div><div class="lbl">Genauigkeit</div></div>
+      </div>
+      <div class="miss-list" id="missList" style="display:none;">
+        <strong>Das üben wir noch:</strong>
+        <div id="missItems"></div>
+      </div>
+      <div class="btn-row">
+        <button class="start-btn secondary-btn" id="menuBtn">🏠 Menü</button>
+        <button class="start-btn" id="retryBtn">🔁 Nochmal</button>
+      </div>
+    </section>
+  </div>
+  <footer>Viel Spaß beim Üben! 💪🧠</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Background floating decorations ----------
+  const emojis = ["✨","⭐","🎉","🔢","➕","✖️","🎯","🚀"];
+  const starsEl = document.getElementById('stars');
+  for(let i=0;i<14;i++){
+    const s = document.createElement('span');
+    s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.left = Math.random()*100+'vw';
+    s.style.top = Math.random()*100+'vh';
+    s.style.animationDelay = (Math.random()*5)+'s';
+    s.style.fontSize = (14+Math.random()*20)+'px';
+    starsEl.appendChild(s);
+  }
+
+  // ---------- Sound (WebAudio, no assets needed) ----------
+  let audioCtx = null;
+  function beep(freq, dur, type){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      g.gain.value = 0.08;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      o.stop(audioCtx.currentTime + dur);
+    }catch(e){}
+  }
+  function sfxCorrect(){ beep(880,0.12,'triangle'); setTimeout(()=>beep(1200,0.14,'triangle'),80); }
+  function sfxWrong(){ beep(160,0.25,'sawtooth'); }
+  function sfxEnd(){ beep(660,0.15,'square'); setTimeout(()=>beep(880,0.15,'square'),150); setTimeout(()=>beep(1100,0.25,'square'),300); }
+
+  // ---------- State ----------
+  const screens = {
+    start: document.getElementById('screen-start'),
+    game: document.getElementById('screen-game'),
+    result: document.getElementById('screen-result'),
+  };
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  let selectedTime = 60;
+  let selectedDiff = 'medium';
+  const diffRanges = { easy:[1,5], medium:[1,10], hard:[1,12] };
+
+  document.getElementById('time-chips').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#time-chips .chip').forEach(c=>c.classList.remove('selected'));
+    chip.classList.add('selected');
+    selectedTime = parseInt(chip.dataset.time,10);
+  });
+  document.getElementById('diff-chips').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#diff-chips .chip').forEach(c=>c.classList.remove('selected'));
+    chip.classList.add('selected');
+    selectedDiff = chip.dataset.diff;
+  });
+
+  // ---------- Highscores (localStorage) ----------
+  const STORAGE_KEY = 'einmaleins_blitz_highscores_v1';
+  function loadScores(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function saveScores(scores){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); }catch(e){}
+  }
+  function scoreKey(time, diff){ return time+'_'+diff; }
+  function renderBestRow(){
+    const scores = loadScores();
+    const key = scoreKey(selectedTime, selectedDiff);
+    const best = scores[key];
+    const row = document.getElementById('bestRow');
+    row.innerHTML = '';
+    const pill = document.createElement('div');
+    pill.className = 'best-pill';
+    pill.textContent = best ? ('🏅 Highscore hier: ' + best.score + ' Punkte') : '🏅 Noch kein Highscore – leg los!';
+    row.appendChild(pill);
+  }
+  renderBestRow();
+  document.getElementById('time-chips').addEventListener('click', renderBestRow);
+  document.getElementById('diff-chips').addEventListener('click', renderBestRow);
+
+  // ---------- Game logic ----------
+  let timeLeft = 60;
+  let totalTime = 60;
+  let score = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let correctCount = 0;
+  let wrongCount = 0;
+  let timerId = null;
+  let currentA = 0, currentB = 0, currentAnswer = 0;
+  let misses = {}; // "a x b" -> count
+  let running = false;
+
+  const timeVal = document.getElementById('timeVal');
+  const scoreVal = document.getElementById('scoreVal');
+  const streakVal = document.getElementById('streakVal');
+  const timerFill = document.getElementById('timerFill');
+  const problemText = document.getElementById('problemText');
+  const answerInput = document.getElementById('answerInput');
+  const flash = document.getElementById('flash');
+  const hudTime = document.getElementById('hud-time');
+
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function newProblem(){
+    const [lo, hi] = diffRanges[selectedDiff];
+    currentA = randInt(lo, hi);
+    currentB = randInt(lo, hi);
+    currentAnswer = currentA * currentB;
+    problemText.textContent = currentA + ' × ' + currentB;
+    answerInput.value = '';
+  }
+
+  function flashFeedback(type){
+    flash.className = 'feedback-flash ' + type;
+    void flash.offsetWidth; // restart animation
+    flash.classList.add(type);
+  }
+
+  function updateHud(){
+    timeVal.textContent = Math.ceil(timeLeft);
+    scoreVal.textContent = score;
+    streakVal.textContent = streak;
+    timerFill.style.width = Math.max(0,(timeLeft/totalTime*100)) + '%';
+    hudTime.classList.toggle('warn', timeLeft <= 10);
+  }
+
+  function submitAnswer(){
+    if(!running) return;
+    const raw = answerInput.value;
+    if(raw === '' ) return;
+    const val = parseInt(raw,10);
+    if(val === currentAnswer){
+      correctCount++;
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
+      const streakBonus = Math.min(streak, 10);
+      score += 10 + streakBonus;
+      sfxCorrect();
+      flashFeedback('correct');
+    } else {
+      wrongCount++;
+      streak = 0;
+      sfxWrong();
+      flashFeedback('wrong');
+      const key = currentA + ' × ' + currentB + ' = ' + currentAnswer;
+      misses[key] = (misses[key]||0) + 1;
+    }
+    updateHud();
+    newProblem();
+    answerInput.focus();
+  }
+
+  function tick(){
+    timeLeft -= 0.1;
+    if(timeLeft <= 0){
+      timeLeft = 0;
+      updateHud();
+      endGame();
+      return;
+    }
+    updateHud();
+  }
+
+  function startGame(){
+    totalTime = selectedTime;
+    timeLeft = selectedTime;
+    score = 0; streak = 0; bestStreak = 0; correctCount = 0; wrongCount = 0;
+    misses = {};
+    running = true;
+    hudTime.classList.remove('warn');
+    updateHud();
+    newProblem();
+    showScreen('game');
+    setTimeout(()=>answerInput.focus(), 150);
+    clearInterval(timerId);
+    timerId = setInterval(tick, 100);
+  }
+
+  function endGame(){
+    running = false;
+    clearInterval(timerId);
+    sfxEnd();
+
+    const total = correctCount + wrongCount;
+    const accuracy = total > 0 ? Math.round((correctCount/total)*100) : 0;
+
+    document.getElementById('statScore').textContent = score;
+    document.getElementById('statCorrect').textContent = correctCount;
+    document.getElementById('statBestStreak').textContent = bestStreak;
+    document.getElementById('statAccuracy').textContent = accuracy + '%';
+
+    let emoji = '🙂', title = 'Gut gemacht!';
+    if(accuracy >= 90 && correctCount >= 10){ emoji='🏆'; title='Wahnsinn! Du bist ein Rechen-Profi!'; }
+    else if(accuracy >= 75){ emoji='🎉'; title='Super gemacht!'; }
+    else if(accuracy >= 50){ emoji='💪'; title='Gut! Weiter so!'; }
+    else { emoji='🌱'; title='Dran bleiben, du schaffst das!'; }
+    document.getElementById('resultEmoji').textContent = emoji;
+    document.getElementById('resultTitle').textContent = title;
+
+    // Highscore check
+    const scores = loadScores();
+    const key = scoreKey(selectedTime, selectedDiff);
+    const prevBest = scores[key];
+    const isNewBest = !prevBest || score > prevBest.score;
+    document.getElementById('newBestBanner').style.display = isNewBest && score > 0 ? 'block' : 'none';
+    if(isNewBest && score > 0){
+      scores[key] = { score, date: new Date().toISOString() };
+      saveScores(scores);
+    }
+
+    // Miss list
+    const missListEl = document.getElementById('missList');
+    const missItemsEl = document.getElementById('missItems');
+    const missEntries = Object.entries(misses).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    if(missEntries.length){
+      missListEl.style.display = 'block';
+      missItemsEl.innerHTML = missEntries.map(([k,v])=> k + (v>1?' (x'+v+')':'')).join('<br>');
+    } else {
+      missListEl.style.display = 'none';
+    }
+
+    showScreen('result');
+  }
+
+  // ---------- Input handling ----------
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('retryBtn').addEventListener('click', startGame);
+  document.getElementById('menuBtn').addEventListener('click', ()=>{ renderBestRow(); showScreen('start'); });
+
+  answerInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ submitAnswer(); }
+  });
+
+  document.getElementById('keypad').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.key');
+    if(!btn) return;
+    const k = btn.dataset.k;
+    if(k === 'enter'){ submitAnswer(); }
+    else if(k === 'del'){ answerInput.value = answerInput.value.slice(0,-1); }
+    else { answerInput.value = (answerInput.value||'') + k; }
+    answerInput.focus();
+  });
+
+  // Auto-submit when the typed number reaches/exceeds the answer's digit length
+  // (kids often forget to press enter) — only triggers on plausible full-length input.
+  answerInput.addEventListener('input', ()=>{
+    const raw = answerInput.value;
+    if(raw.length >= String(currentAnswer).length && raw.length >= 1){
+      // small delay so it feels natural, not jumpy
+      clearTimeout(answerInput._autoTimer);
+      answerInput._autoTimer = setTimeout(()=>{
+        if(document.activeElement === answerInput && running){
+          submitAnswer();
+        }
+      }, 260);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
