@@ -430,6 +430,105 @@
   .stat-good{ background:#F0FDF4; border-color:#BBF7D0; color:#166534; }
   .stat-new{ background:#F3F4F6; border-color:#E5E7EB; color:#4B5563; }
 
+  /* --- Main menu (topic selection) --- */
+  .menu-card-list{ display:flex; flex-direction:column; gap:14px; margin-top:6px; }
+  .menu-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    width:100%;
+    text-align:left;
+    padding:18px;
+    border-radius:20px;
+    border:3px solid #E5E7EB;
+    background:#F9FAFB;
+    cursor:pointer;
+    transition: all .15s ease;
+    box-shadow:0 4px 0 #E0E0E5;
+    font-family:'Fredoka', sans-serif;
+  }
+  .menu-card:active{ transform:translateY(3px); box-shadow:none; }
+  .menu-card-icon{ font-size:2.2rem; flex-shrink:0; }
+  .menu-card-text{ display:flex; flex-direction:column; gap:2px; }
+  .menu-card-title{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:1.15rem; color:#312E81; }
+  .menu-card-desc{ font-size:0.85rem; color:#6B7280; font-weight:600; }
+
+  .topic-back-btn{
+    display:inline-block;
+    margin-bottom:14px;
+    padding:8px 14px;
+    border-radius:100px;
+    border:2px solid #E5E7EB;
+    background:#F9FAFB;
+    color:#4B5563;
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    cursor:pointer;
+  }
+
+  /* --- Worksheet-style exercises (Teilbarkeit / Primzahlen) --- */
+  .mini-input{
+    width:58px;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1.05rem;
+    text-align:center;
+    padding:10px 4px;
+    border-radius:12px;
+    border:3px solid #A78BFA;
+    outline:none;
+    color:#312E81;
+    background:#fff;
+  }
+  .mini-input:focus{ border-color:#EC4899; box-shadow:0 0 0 3px #EC489933; }
+  .mini-input.field-correct{ background:#F0FDF4; border-color:#22C55E; }
+  .mini-input.field-wrong{ background:#FEF2F2; border-color:#EF4444; }
+
+  .toggle-chip{
+    flex:1 1 auto;
+    min-width:60px;
+    padding:14px 10px;
+    border-radius:14px;
+    border:3px solid #E5E7EB;
+    background:#F9FAFB;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    color:#374151;
+    cursor:pointer;
+    text-align:center;
+    transition: all .15s ease;
+    user-select:none;
+  }
+  .toggle-chip.active{ background: linear-gradient(135deg, #7C3AED, #EC4899); border-color:#7C3AED; color:#fff; }
+  .toggle-chip.active:not(.prime-chip)::after{ content:' ✗'; }
+  .toggle-chip.field-correct{ background:#F0FDF4; border-color:#22C55E; color:#166534; }
+  .toggle-chip.field-wrong{ background:#FEF2F2; border-color:#EF4444; color:#991B1B; }
+
+  .prime-choice.selected{ background: linear-gradient(135deg, #7C3AED, #EC4899); color:#fff; box-shadow:0 6px 0 #5B21B6; }
+  .prime-choice.field-correct{ background: linear-gradient(135deg, #22C55E, #16A34A); color:#fff; box-shadow:0 6px 0 #15803D; }
+  .prime-choice.field-wrong{ background: linear-gradient(135deg, #F87171, #B91C1C); color:#fff; box-shadow:0 6px 0 #991B1B; }
+
+  .house-label{ font-weight:700; color:#4C1D95; margin-bottom:10px; text-align:center; font-size:1.02rem; }
+  .divisor-grid{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .factor-row{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; }
+  .factor-x{ font-weight:800; font-size:1.2rem; color:#7C3AED; }
+
+  .rule-sentence{ font-size:1.05rem; line-height:2.4; text-align:center; color:#312E81; font-weight:600; }
+  .rule-input{ width:110px; font-size:0.95rem; }
+
+  .seq-row{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:center; }
+  .seq-set-label{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:1.1rem; color:#4C1D95; margin-right:4px; }
+  .seq-brace{ font-size:1.4rem; font-weight:800; color:#7C3AED; }
+  .seq-fixed{ min-width:34px; padding:6px 4px; text-align:center; font-weight:700; color:#312E81; }
+  .seq-box{ width:52px; }
+
+  .prime-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .prime-chip{ font-size:1.3rem; padding:16px 0; }
+
+  .worksheet-hint{ text-align:center; color:#6B7280; font-weight:600; font-size:0.85rem; margin-top:12px; }
+
   footer{
     text-align:center;
     color:#ffffffcc;
@@ -452,11 +551,39 @@
 <div class="app">
   <h2 class="name-heading">🌟 1x1 für Ida 🌟</h2>
   <div class="card">
-    <h1 class="title">⚡ 1x1 Blitz ⚡</h1>
-    <p class="subtitle" id="subtitleText">Das Einmaleins-Rennen auf Zeit!</p>
+    <h1 class="title" id="mainTitle">🎓 Matheübungen</h1>
+    <p class="subtitle" id="subtitleText">Wähle dein Thema</p>
+
+    <!-- MAIN MENU -->
+    <section class="section active" id="screen-menu">
+      <div class="menu-card-list">
+        <button class="menu-card" id="menuCard-1x1">
+          <span class="menu-card-icon">⚡</span>
+          <span class="menu-card-text">
+            <span class="menu-card-title">1x1 Blitz</span>
+            <span class="menu-card-desc">Kleines Einmaleins auf Zeit</span>
+          </span>
+        </button>
+        <button class="menu-card" id="menuCard-teilbarkeit">
+          <span class="menu-card-icon">➗</span>
+          <span class="menu-card-text">
+            <span class="menu-card-title">Teilbarkeit</span>
+            <span class="menu-card-desc">Teiler, Regeln &amp; Teilermengen</span>
+          </span>
+        </button>
+        <button class="menu-card" id="menuCard-primzahlen">
+          <span class="menu-card-icon">🔢</span>
+          <span class="menu-card-text">
+            <span class="menu-card-title">Primzahlen</span>
+            <span class="menu-card-desc">Erkennen &amp; zerlegen</span>
+          </span>
+        </button>
+      </div>
+    </section>
 
     <!-- START SCREEN -->
-    <section class="section active" id="screen-start">
+    <section class="section" id="screen-start">
+      <button class="topic-back-btn" id="backFrom1x1">🏠 Hauptmenü</button>
       <div class="field-label">🎯 Wähle deine Zeit</div>
       <div class="chip-row" id="time-chips">
         <div class="chip" data-time="30">30 Sek</div>
@@ -533,6 +660,66 @@
       <div class="stats-list" id="statsList"></div>
       <button class="start-btn secondary-btn" id="statsBackBtn">🏠 Zurück zum Menü</button>
     </section>
+
+    <!-- TOPIC START SCREEN (shared: Teilbarkeit / Primzahlen) -->
+    <section class="section" id="screen-topic-start">
+      <button class="topic-back-btn" id="backFromTopicStart">🏠 Hauptmenü</button>
+      <div class="field-label">📝 Wie viele Aufgaben?</div>
+      <div class="chip-row" id="topic-count-chips">
+        <div class="chip" data-count="8">8</div>
+        <div class="chip selected" data-count="12">12</div>
+        <div class="chip" data-count="16">16</div>
+      </div>
+      <button class="start-btn" id="topicStartBtn">🚀 Los geht's!</button>
+      <button class="start-btn secondary-btn stats-link-btn" id="topicStatsBtn">📊 Statistik ansehen</button>
+    </section>
+
+    <!-- TOPIC GAME SCREEN (shared: Teilbarkeit / Primzahlen) -->
+    <section class="section" id="screen-topic-game">
+      <div class="hud">
+        <div class="hud-box"><div class="val" id="topicProgressVal">1 / 12</div><div class="lbl">Aufgabe</div></div>
+        <div class="hud-box" id="topic-hud-score"><div class="val" id="topicScoreVal">0</div><div class="lbl">Richtig</div></div>
+      </div>
+      <div class="timer-track"><div class="timer-fill" id="topicProgressFill" style="background:linear-gradient(90deg,#7C3AED,#EC4899); width:0%;"></div></div>
+
+      <div class="problem-card" id="topicQuestionCard">
+        <div class="feedback-flash" id="topicFlash"></div>
+        <div id="topicQuestionLabel" class="worksheet-hint" style="margin-top:0;">Aufgabe</div>
+        <div id="worksheetQuestion"></div>
+      </div>
+
+      <button class="start-btn" id="checkBtn">✅ Prüfen</button>
+      <button class="start-btn" id="nextBtn" style="display:none;">➡️ Weiter</button>
+    </section>
+
+    <!-- TOPIC RESULT SCREEN (shared: Teilbarkeit / Primzahlen) -->
+    <section class="section" id="screen-topic-result">
+      <div class="result-emoji" id="topicResultEmoji">🏆</div>
+      <h2 class="result-title" id="topicResultTitle">Super gemacht!</h2>
+      <div class="stats-grid">
+        <div class="stat"><div class="num" id="topicStatCorrect">0</div><div class="lbl">Richtig</div></div>
+        <div class="stat"><div class="num" id="topicStatAccuracy">0%</div><div class="lbl">Genauigkeit</div></div>
+      </div>
+      <div class="miss-list" id="topicMissList" style="display:none;">
+        <strong>Das üben wir noch:</strong>
+        <div id="topicMissItems"></div>
+      </div>
+      <div class="btn-row">
+        <button class="start-btn secondary-btn" id="topicMenuBtn">🏠 Menü</button>
+        <button class="start-btn" id="topicRetryBtn">🔁 Nochmal</button>
+      </div>
+    </section>
+
+    <!-- TOPIC STATS SCREEN (shared: Teilbarkeit / Primzahlen) -->
+    <section class="section" id="screen-topic-stats">
+      <h2 class="result-title">📊 Deine Statistik</h2>
+      <p class="stats-intro">🔴 noch üben · 🟡 wird besser · 🟢 sitzt schon gut</p>
+      <div class="stats-empty" id="topicStatsEmpty" style="display:none;">
+        Noch keine Aufgaben gelöst.<br>Starte eine Runde, dann siehst du hier deinen Fortschritt! 🚀
+      </div>
+      <div class="stats-list" id="topicStatsList"></div>
+      <button class="start-btn secondary-btn" id="topicStatsBackBtn">🏠 Zurück</button>
+    </section>
   </div>
   <footer>Viel Spaß beim Üben! 💪🧠</footer>
 </div>
@@ -576,14 +763,30 @@
 
   // ---------- State ----------
   const screens = {
+    menu: document.getElementById('screen-menu'),
     start: document.getElementById('screen-start'),
     game: document.getElementById('screen-game'),
     result: document.getElementById('screen-result'),
     stats: document.getElementById('screen-stats'),
+    topicStart: document.getElementById('screen-topic-start'),
+    topicGame: document.getElementById('screen-topic-game'),
+    topicResult: document.getElementById('screen-topic-result'),
+    topicStats: document.getElementById('screen-topic-stats'),
   };
   function showScreen(name){
     Object.values(screens).forEach(s=>s.classList.remove('active'));
     screens[name].classList.add('active');
+  }
+
+  const mainTitleEl = document.getElementById('mainTitle');
+  const subtitleTextEl = document.getElementById('subtitleText');
+  function setHeader(title, subtitle){
+    mainTitleEl.textContent = title;
+    subtitleTextEl.textContent = subtitle;
+  }
+  function goToMainMenu(){
+    setHeader('🎓 Matheübungen', 'Wähle dein Thema');
+    showScreen('menu');
   }
 
   let selectedTime = 60;
@@ -886,7 +1089,14 @@
   // ---------- Input handling ----------
   document.getElementById('startBtn').addEventListener('click', startGame);
   document.getElementById('retryBtn').addEventListener('click', startGame);
-  document.getElementById('menuBtn').addEventListener('click', ()=>{ renderBestRow(); showScreen('start'); });
+  document.getElementById('menuBtn').addEventListener('click', goToMainMenu);
+  document.getElementById('backFrom1x1').addEventListener('click', goToMainMenu);
+
+  document.getElementById('menuCard-1x1').addEventListener('click', ()=>{
+    setHeader('⚡ 1x1 Blitz ⚡', 'Das Einmaleins-Rennen auf Zeit!');
+    renderBestRow();
+    showScreen('start');
+  });
 
   answerInput.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter'){ submitAnswer(); }
@@ -923,6 +1133,507 @@
       answerInput.value = answerInput.value.replace(/[^0-9]/g,'');
     }
     maybeAutoSubmit();
+  });
+
+  // =========================================================================
+  // ---------- Worksheet topics: Teilbarkeit & Primzahlen ----------
+  // Untimed, worksheet-style sessions (fixed number of tasks, "Prüfen" /
+  // "Weiter" per task) — a different rhythm from the timed 1x1 game, closer
+  // to how the tasks look on paper.
+  // =========================================================================
+
+  function getDivisors(n){
+    const divs = [];
+    for(let i=1;i<=n;i++){ if(n % i === 0) divs.push(i); }
+    return divs;
+  }
+  function isPrimeNum(n){
+    if(n < 2) return false;
+    if(n % 2 === 0) return n === 2;
+    for(let i=3;i*i<=n;i+=2){ if(n % i === 0) return false; }
+    return true;
+  }
+  function getPrimeFactors(n){
+    const factors = [];
+    let x = n, d = 2;
+    while(d*d <= x){
+      while(x % d === 0){ factors.push(d); x/=d; }
+      d++;
+    }
+    if(x > 1) factors.push(x);
+    return factors;
+  }
+
+  // ----- Teilbarkeit generators -----
+  function genDivTable(){
+    const n = randInt(100, 99999);
+    return {
+      subtype:'divtable', subtypeLabel:'Teilbarkeit-Tabelle',
+      data:{ n, answer:{ 2:(n%2===0), 5:(n%5===0), 10:(n%10===0) } }
+    };
+  }
+  function genTeilerhaus(){
+    let n, divs, tries=0;
+    do{ n = randInt(8,90); divs = getDivisors(n); tries++; }
+    while((divs.length<4 || divs.length>8) && tries<50);
+    return { subtype:'teilerhaus', subtypeLabel:'Teilerhaus', data:{ n, divisors:divs } };
+  }
+  const RULE_SENTENCES = [
+    { template:'Wenn eine Zahl durch 10 teilbar ist, dann ist sie immer auch durch {0} teilbar.',
+      blanks:[{ multi:true, values:['2','5'], hint:'2 und 5' }] },
+    { template:'Zahlen mit einer {0} an der Einerstelle kann man durch 2 teilen.',
+      blanks:[{ multi:true, values:['0','2','4','6','8'], hint:'0, 2, 4, 6 oder 8' }] },
+    { template:'Alle Zahlen, die man durch 2 teilen kann, heißen {0} Zahlen.',
+      blanks:[{ accept:['gerade'], hint:'gerade' }] },
+    { template:'Zahlen mit einer {0} an der Einerstelle kann man durch 5 teilen.',
+      blanks:[{ multi:true, values:['0','5'], hint:'0 oder 5' }] },
+    { template:'Zahlen mit einer {0} an der Einerstelle kann man durch 10 teilen.',
+      blanks:[{ accept:['0'], hint:'0' }] },
+  ];
+  function genRegel(){
+    const rule = RULE_SENTENCES[randInt(0, RULE_SENTENCES.length-1)];
+    return { subtype:'regel', subtypeLabel:'Regel-Lücke', data:{ rule } };
+  }
+  function genMengen(){
+    const kind = Math.random() < 0.5 ? 'teiler' : 'vielfache';
+    if(kind === 'teiler'){
+      let n, divs, tries=0;
+      do{ n = randInt(12,90); divs = getDivisors(n); tries++; }
+      while((divs.length<4 || divs.length>8) && tries<50);
+      const blankCount = Math.min(3, Math.max(2, Math.floor(divs.length/2)), divs.length-1);
+      const indices = [];
+      while(indices.length < blankCount){
+        const idx = randInt(1, divs.length-1); // keep "1" always shown
+        if(!indices.includes(idx)) indices.push(idx);
+      }
+      return { subtype:'mengen', subtypeLabel:'Teilermenge', data:{ kind, n, sequence:divs, blankIndices:indices } };
+    } else {
+      const n = randInt(2,15);
+      const seq = [];
+      for(let k=1;k<=8;k++) seq.push(n*k);
+      const blankCount = 3;
+      const indices = [];
+      while(indices.length < blankCount){
+        const idx = randInt(0, seq.length-1);
+        if(!indices.includes(idx)) indices.push(idx);
+      }
+      return { subtype:'mengen', subtypeLabel:'Vielfachenmenge', data:{ kind, n, sequence:seq, blankIndices:indices } };
+    }
+  }
+
+  // ----- Primzahlen generators -----
+  function genIsPrime(){
+    const n = randInt(2, 100);
+    return { subtype:'isprime', subtypeLabel:'Primzahl erkennen', data:{ n, answer:isPrimeNum(n) } };
+  }
+  function genPrimeGrid(){
+    const numbers = [];
+    while(numbers.length < 9){
+      const n = randInt(2,100);
+      if(!numbers.includes(n)) numbers.push(n);
+    }
+    const answer = {};
+    numbers.forEach(n=>{ answer[n] = isPrimeNum(n); });
+    return { subtype:'grid', subtypeLabel:'Primzahlen finden', data:{ numbers, answer } };
+  }
+  function genFactorize(){
+    const smallPrimes = [2,3,5,7,11,13];
+    let n, factors, tries=0;
+    do{
+      const count = randInt(2,4);
+      let product = 1;
+      const chosen = [];
+      for(let k=0;k<count;k++){
+        const p = smallPrimes[randInt(0, smallPrimes.length-1)];
+        if(product * p > 300) break;
+        product *= p;
+        chosen.push(p);
+      }
+      n = product;
+      factors = chosen.sort((a,b)=>a-b);
+      tries++;
+    } while((factors.length < 2 || n < 4) && tries < 50);
+    return { subtype:'factorize', subtypeLabel:'Primfaktorzerlegung', data:{ n, factors } };
+  }
+
+  const TOPICS = {
+    teilbarkeit: {
+      label:'➗ Teilbarkeit', subtitle:'Übungen wie auf dem Arbeitsblatt',
+      statsKey:'einmaleins_blitz_teilbarkeit_stats_v1',
+      subtypeLabels:{ divtable:'Teilbarkeit-Tabelle', teilerhaus:'Teilerhaus', regel:'Regel-Lücke', mengen:'Teiler-/Vielfachenmenge' },
+      generate(){ return [genDivTable, genTeilerhaus, genRegel, genMengen][randInt(0,3)](); }
+    },
+    primzahlen: {
+      label:'🔢 Primzahlen', subtitle:'Erkennen & zerlegen',
+      statsKey:'einmaleins_blitz_primzahlen_stats_v1',
+      subtypeLabels:{ isprime:'Primzahl erkennen', grid:'Primzahlen finden', factorize:'Primfaktorzerlegung' },
+      generate(){ return [genIsPrime, genPrimeGrid, genFactorize][randInt(0,2)](); }
+    }
+  };
+
+  // ----- Rendering & checking questions -----
+  const worksheetBox = document.getElementById('worksheetQuestion');
+  const topicQuestionLabel = document.getElementById('topicQuestionLabel');
+  const checkBtn = document.getElementById('checkBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const topicFlash = document.getElementById('topicFlash');
+
+  let currentTopicKey = null;
+  let currentQuestion = null;
+  let checked = false;
+  let topicQuestionIndex = 0;
+  let topicTotalQuestions = 12;
+  let topicSelectedCount = 12;
+  let topicCorrectCount = 0;
+  let topicMisses = {};
+
+  function flashTopicFeedback(type){
+    topicFlash.className = 'feedback-flash ' + type;
+    void topicFlash.offsetWidth;
+    topicFlash.classList.add(type);
+  }
+
+  function renderWorksheetQuestion(q){
+    checked = false;
+    topicQuestionLabel.textContent = q.subtypeLabel;
+    checkBtn.style.display = 'block';
+    nextBtn.style.display = 'none';
+
+    if(q.subtype === 'divtable'){
+      worksheetBox.innerHTML =
+        '<div class="problem" style="font-size:2.2rem;margin:6px 0 14px;">'+q.data.n+'</div>'
+        + '<div class="chip-row">'
+        + '<div class="toggle-chip" data-col="2">: 2</div>'
+        + '<div class="toggle-chip" data-col="5">: 5</div>'
+        + '<div class="toggle-chip" data-col="10">: 10</div>'
+        + '</div>';
+    }
+    else if(q.subtype === 'teilerhaus'){
+      let boxes = '';
+      for(let i=0;i<q.data.divisors.length;i++){
+        boxes += '<input type="text" inputmode="numeric" class="mini-input divisor-box" data-idx="'+i+'" autocomplete="off" maxlength="3">';
+      }
+      worksheetBox.innerHTML =
+        '<div class="house-label">Teiler von <strong>'+q.data.n+'</strong></div>'
+        + '<div class="divisor-grid">'+boxes+'</div>';
+    }
+    else if(q.subtype === 'regel'){
+      let idx = 0;
+      const html = q.data.rule.template.replace(/\{0\}/g, function(){
+        return '<input type="text" class="mini-input rule-input" data-bidx="'+(idx++)+'" autocomplete="off">';
+      });
+      worksheetBox.innerHTML = '<div class="rule-sentence">'+html+'</div>';
+    }
+    else if(q.subtype === 'mengen'){
+      const { kind, n, sequence, blankIndices } = q.data;
+      const setLabel = (kind === 'teiler' ? 'T' : 'V') + '<sub>'+n+'</sub> =';
+      const cells = sequence.map(function(val, i){
+        if(blankIndices.includes(i)){
+          return '<input type="text" inputmode="numeric" class="mini-input seq-box" data-idx="'+i+'" autocomplete="off" maxlength="4">';
+        }
+        return '<div class="seq-fixed">'+val+'</div>';
+      }).join('');
+      const tail = kind === 'vielfache' ? '<div class="seq-fixed">…</div>' : '';
+      worksheetBox.innerHTML =
+        '<div class="seq-row"><div class="seq-set-label">'+setLabel+'</div><div class="seq-brace">{</div>'
+        + cells + tail + '<div class="seq-brace">}</div></div>';
+    }
+    else if(q.subtype === 'isprime'){
+      worksheetBox.innerHTML =
+        '<div class="problem" style="font-size:2.6rem;margin:6px 0 16px;">'+q.data.n+'</div>'
+        + '<div class="btn-row">'
+        + '<button class="start-btn secondary-btn prime-choice" data-choice="yes">✅ Ja, Primzahl</button>'
+        + '<button class="start-btn secondary-btn prime-choice" data-choice="no">❌ Keine Primzahl</button>'
+        + '</div>';
+    }
+    else if(q.subtype === 'grid'){
+      const chips = q.data.numbers.map(function(n){
+        return '<div class="toggle-chip prime-chip" data-num="'+n+'">'+n+'</div>';
+      }).join('');
+      worksheetBox.innerHTML = '<div class="prime-grid">'+chips+'</div>';
+    }
+    else if(q.subtype === 'factorize'){
+      let boxes = '';
+      for(let i=0;i<q.data.factors.length;i++){
+        if(i>0) boxes += '<div class="factor-x">×</div>';
+        boxes += '<input type="text" inputmode="numeric" class="mini-input factor-box" data-idx="'+i+'" autocomplete="off" maxlength="3">';
+      }
+      worksheetBox.innerHTML =
+        '<div class="house-label">Primfaktorzerlegung von <strong>'+q.data.n+'</strong></div>'
+        + '<div class="factor-row">'+boxes+'</div>';
+    }
+  }
+
+  function checkWorksheetQuestion(q){
+    let correct = false;
+    if(q.subtype === 'divtable'){
+      const chips = worksheetBox.querySelectorAll('.toggle-chip[data-col]');
+      let allMatch = true;
+      chips.forEach(function(chip){
+        const shouldMark = q.data.answer[chip.dataset.col];
+        const userMarked = chip.classList.contains('active');
+        chip.classList.add(userMarked === shouldMark ? 'field-correct' : 'field-wrong');
+        if(userMarked !== shouldMark) allMatch = false;
+      });
+      correct = allMatch;
+    }
+    else if(q.subtype === 'teilerhaus'){
+      const boxes = worksheetBox.querySelectorAll('.divisor-box');
+      const divisorSet = new Set(q.data.divisors);
+      const claimed = new Set();
+      let allBoxesCorrect = true;
+      boxes.forEach(function(inp){
+        const val = parseInt(inp.value, 10);
+        if(!isNaN(val) && divisorSet.has(val) && !claimed.has(val)){
+          inp.classList.add('field-correct');
+          claimed.add(val);
+        } else {
+          inp.classList.add('field-wrong');
+          allBoxesCorrect = false;
+        }
+      });
+      correct = allBoxesCorrect && claimed.size === divisorSet.size;
+      if(!correct){
+        const missing = q.data.divisors.filter(function(d){ return !claimed.has(d); });
+        if(missing.length){
+          const info = document.createElement('div');
+          info.className = 'worksheet-hint';
+          info.textContent = 'Fehlt noch: ' + missing.join(', ');
+          worksheetBox.appendChild(info);
+        }
+      }
+    }
+    else if(q.subtype === 'regel'){
+      const inputs = worksheetBox.querySelectorAll('.rule-input');
+      let allMatch = true;
+      inputs.forEach(function(inp){
+        const blank = q.data.rule.blanks[parseInt(inp.dataset.bidx,10)];
+        const norm = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
+        let ok = false;
+        if(blank.multi){
+          const parts = norm.replace(/\bund\b/g,',').replace(/\boder\b/g,',')
+            .split(/[,\s]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+          const setUser = new Set(parts);
+          ok = setUser.size === blank.values.length && blank.values.every(function(v){ return setUser.has(v); });
+        } else {
+          ok = blank.accept.indexOf(norm) !== -1;
+        }
+        inp.classList.add(ok ? 'field-correct' : 'field-wrong');
+        if(!ok) allMatch = false;
+      });
+      correct = allMatch;
+      if(!correct){
+        const hints = q.data.rule.blanks.map(function(b){ return b.hint; }).join(', ');
+        const info = document.createElement('div');
+        info.className = 'worksheet-hint';
+        info.textContent = 'Richtig wäre: ' + hints;
+        worksheetBox.appendChild(info);
+      }
+    }
+    else if(q.subtype === 'mengen'){
+      const inputs = worksheetBox.querySelectorAll('.seq-box');
+      let allMatch = true;
+      inputs.forEach(function(inp){
+        const idx = parseInt(inp.dataset.idx,10);
+        const ok = parseInt(inp.value,10) === q.data.sequence[idx];
+        inp.classList.add(ok ? 'field-correct' : 'field-wrong');
+        if(!ok) allMatch = false;
+      });
+      correct = allMatch;
+    }
+    else if(q.subtype === 'isprime'){
+      const userChoice = q._userChoice;
+      correct = (userChoice === 'yes') === q.data.answer;
+      worksheetBox.querySelectorAll('.prime-choice').forEach(function(btn){
+        const isYes = btn.dataset.choice === 'yes';
+        if(isYes === q.data.answer) btn.classList.add('field-correct');
+        else if(btn.dataset.choice === userChoice) btn.classList.add('field-wrong');
+      });
+    }
+    else if(q.subtype === 'grid'){
+      const chips = worksheetBox.querySelectorAll('.prime-chip');
+      let allMatch = true;
+      chips.forEach(function(chip){
+        const n = parseInt(chip.dataset.num,10);
+        const shouldMark = q.data.answer[n];
+        const userMarked = chip.classList.contains('active');
+        chip.classList.add(userMarked === shouldMark ? 'field-correct' : 'field-wrong');
+        if(userMarked !== shouldMark) allMatch = false;
+      });
+      correct = allMatch;
+    }
+    else if(q.subtype === 'factorize'){
+      const boxes = worksheetBox.querySelectorAll('.factor-box');
+      const remaining = q.data.factors.slice().sort(function(a,b){ return a-b; });
+      const userVals = Array.prototype.map.call(boxes, function(b){ return parseInt(b.value,10); });
+      correct = remaining.length === userVals.length
+        && remaining.every(function(v,i){ return v === userVals.slice().sort(function(a,b){return a-b;})[i]; });
+      boxes.forEach(function(inp){
+        const val = parseInt(inp.value,10);
+        const pos = remaining.indexOf(val);
+        if(pos !== -1){ inp.classList.add('field-correct'); remaining.splice(pos,1); }
+        else inp.classList.add('field-wrong');
+      });
+    }
+    return correct;
+  }
+
+  function lockWorksheetInputs(){
+    worksheetBox.querySelectorAll('input').forEach(function(inp){ inp.readOnly = true; });
+  }
+
+  worksheetBox.addEventListener('click', function(e){
+    if(checked) return;
+    const chip = e.target.closest('.toggle-chip');
+    if(chip){ chip.classList.toggle('active'); return; }
+    const choice = e.target.closest('.prime-choice');
+    if(choice){
+      worksheetBox.querySelectorAll('.prime-choice').forEach(function(b){ b.classList.remove('selected'); });
+      choice.classList.add('selected');
+      currentQuestion._userChoice = choice.dataset.choice;
+    }
+  });
+  worksheetBox.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      (checked ? nextBtn : checkBtn).click();
+    }
+  });
+
+  // ----- Per-topic subtype stats (localStorage) -----
+  function loadTopicStats(topicKey){
+    try{ return JSON.parse(localStorage.getItem(TOPICS[topicKey].statsKey)) || {}; }catch(e){ return {}; }
+  }
+  function recordTopicAttempt(topicKey, subtype, correct){
+    const stats = loadTopicStats(topicKey);
+    if(!stats[subtype]) stats[subtype] = { attempts:0, correct:0, wrong:0 };
+    stats[subtype].attempts++;
+    if(correct) stats[subtype].correct++; else stats[subtype].wrong++;
+    try{ localStorage.setItem(TOPICS[topicKey].statsKey, JSON.stringify(stats)); }catch(e){}
+  }
+  function renderTopicStats(topicKey){
+    const topic = TOPICS[topicKey];
+    const stats = loadTopicStats(topicKey);
+    const entries = Object.entries(stats).map(function([subtype, s]){
+      const accuracy = s.attempts ? Math.round((s.correct/s.attempts)*100) : 0;
+      const wrongRate = s.attempts ? (s.wrong/s.attempts) : 0;
+      return { label: topic.subtypeLabels[subtype] || subtype, attempts:s.attempts, accuracy, wrongRate };
+    });
+    entries.sort(function(x,y){ return y.wrongRate - x.wrongRate; });
+
+    const listEl = document.getElementById('topicStatsList');
+    const emptyEl = document.getElementById('topicStatsEmpty');
+    if(entries.length === 0){
+      emptyEl.style.display = 'block';
+      listEl.innerHTML = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.innerHTML = entries.map(function(e){
+      let badge, cls;
+      if(e.attempts < 3){ badge='🆕'; cls='stat-new'; }
+      else if(e.wrongRate > 0.35){ badge='🔴'; cls='stat-bad'; }
+      else if(e.wrongRate > 0.12){ badge='🟡'; cls='stat-mid'; }
+      else { badge='🟢'; cls='stat-good'; }
+      return '<div class="stat-row '+cls+'">'
+        + '<div class="stat-row-problem">'+badge+' '+e.label+'</div>'
+        + '<div class="stat-row-meta">'+e.accuracy+'% · '+e.attempts+'x</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ----- Session flow -----
+  function openTopic(key){
+    currentTopicKey = key;
+    setHeader(TOPICS[key].label, TOPICS[key].subtitle);
+    showScreen('topicStart');
+  }
+  document.getElementById('menuCard-teilbarkeit').addEventListener('click', function(){ openTopic('teilbarkeit'); });
+  document.getElementById('menuCard-primzahlen').addEventListener('click', function(){ openTopic('primzahlen'); });
+  document.getElementById('backFromTopicStart').addEventListener('click', goToMainMenu);
+  document.getElementById('topicMenuBtn').addEventListener('click', goToMainMenu);
+  document.getElementById('topicStatsBackBtn').addEventListener('click', function(){ showScreen('topicStart'); });
+
+  document.getElementById('topic-count-chips').addEventListener('click', function(e){
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#topic-count-chips .chip').forEach(function(c){ c.classList.remove('selected'); });
+    chip.classList.add('selected');
+    topicSelectedCount = parseInt(chip.dataset.count,10);
+  });
+
+  function nextTopicQuestion(){
+    if(topicQuestionIndex >= topicTotalQuestions){ endTopicSession(); return; }
+    topicQuestionIndex++;
+    currentQuestion = TOPICS[currentTopicKey].generate();
+    document.getElementById('topicProgressVal').textContent = topicQuestionIndex + ' / ' + topicTotalQuestions;
+    document.getElementById('topicScoreVal').textContent = topicCorrectCount;
+    document.getElementById('topicProgressFill').style.width = Math.round((topicQuestionIndex-1)/topicTotalQuestions*100) + '%';
+    renderWorksheetQuestion(currentQuestion);
+  }
+
+  function startTopicSession(){
+    topicTotalQuestions = topicSelectedCount;
+    topicQuestionIndex = 0;
+    topicCorrectCount = 0;
+    topicMisses = {};
+    showScreen('topicGame');
+    nextTopicQuestion();
+  }
+  document.getElementById('topicStartBtn').addEventListener('click', startTopicSession);
+  document.getElementById('topicRetryBtn').addEventListener('click', startTopicSession);
+
+  checkBtn.addEventListener('click', function(){
+    if(checked) return;
+    checked = true;
+    const correct = checkWorksheetQuestion(currentQuestion);
+    lockWorksheetInputs();
+    recordTopicAttempt(currentTopicKey, currentQuestion.subtype, correct);
+    if(correct){
+      topicCorrectCount++;
+      sfxCorrect();
+      flashTopicFeedback('correct');
+    } else {
+      sfxWrong();
+      flashTopicFeedback('wrong');
+      const label = TOPICS[currentTopicKey].subtypeLabels[currentQuestion.subtype];
+      topicMisses[label] = (topicMisses[label]||0) + 1;
+    }
+    document.getElementById('topicScoreVal').textContent = topicCorrectCount;
+    checkBtn.style.display = 'none';
+    nextBtn.style.display = 'block';
+  });
+  nextBtn.addEventListener('click', nextTopicQuestion);
+
+  function endTopicSession(){
+    sfxEnd();
+    const accuracy = topicTotalQuestions > 0 ? Math.round((topicCorrectCount/topicTotalQuestions)*100) : 0;
+    document.getElementById('topicStatCorrect').textContent = topicCorrectCount + ' / ' + topicTotalQuestions;
+    document.getElementById('topicStatAccuracy').textContent = accuracy + '%';
+
+    let emoji='🙂', title='Gut gemacht!';
+    if(accuracy >= 90){ emoji='🏆'; title='Wahnsinn, super Ergebnis!'; }
+    else if(accuracy >= 75){ emoji='🎉'; title='Klasse gemacht!'; }
+    else if(accuracy >= 50){ emoji='💪'; title='Gut! Weiter so!'; }
+    else { emoji='🌱'; title='Dran bleiben, du schaffst das!'; }
+    document.getElementById('topicResultEmoji').textContent = emoji;
+    document.getElementById('topicResultTitle').textContent = title;
+
+    const missListEl = document.getElementById('topicMissList');
+    const missItemsEl = document.getElementById('topicMissItems');
+    const missEntries = Object.entries(topicMisses).sort(function(a,b){ return b[1]-a[1]; });
+    if(missEntries.length){
+      missListEl.style.display = 'block';
+      missItemsEl.innerHTML = missEntries.map(function([k,v]){ return k + ' (' + v + 'x falsch)'; }).join('<br>');
+    } else {
+      missListEl.style.display = 'none';
+    }
+    showScreen('topicResult');
+  }
+
+  document.getElementById('topicStatsBtn').addEventListener('click', function(){
+    renderTopicStats(currentTopicKey);
+    showScreen('topicStats');
   });
 
 })();
