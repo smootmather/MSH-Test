@@ -556,6 +556,75 @@
   .toggle-chip.part-pending{ opacity:.45; cursor:default; }
   #topic-hud-time.warn .val{ color:var(--danger); animation: shake .4s infinite; }
 
+  /* --- Coins --- */
+  .coin-badge{
+    position:relative;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    width:fit-content; margin:0 auto 14px;
+    background: linear-gradient(135deg, #FDE68A, #FBBF24);
+    color:#78350F;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:1rem;
+    padding:8px 18px;
+    border-radius:100px;
+    border:2px solid #F59E0B;
+    box-shadow:0 4px 0 #D97706;
+  }
+  @keyframes coinPop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.18); } 100%{ transform:scale(1); } }
+  .coin-badge.coin-pop{ animation: coinPop .35s ease; }
+  .coin-pop-text{
+    position:absolute; top:-16px; right:2px;
+    color:#16A34A; font-weight:800; font-size:0.85rem;
+    animation: coinFloatUp .9s ease forwards;
+    pointer-events:none;
+  }
+  @keyframes coinFloatUp{ 0%{ opacity:1; transform:translateY(0); } 100%{ opacity:0; transform:translateY(-22px); } }
+
+  /* --- Pause button --- */
+  .pause-btn{
+    flex:0 0 auto;
+    width:44px;
+    border-radius:16px;
+    border:none;
+    background:#F3F4F6;
+    color:#4B5563;
+    font-size:1.1rem;
+    cursor:pointer;
+    box-shadow:0 4px 0 #D1D5DB;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pause-btn:active{ transform:translateY(3px); box-shadow:none; }
+  .pause-btn.pause-btn-danger{ background: linear-gradient(135deg, #F87171, #B91C1C); color:#fff; box-shadow:0 4px 0 #991B1B; }
+
+  /* --- Pause / explosion overlays --- */
+  .game-overlay{
+    position:absolute; inset:0; z-index:20;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:30px;
+    background:rgba(255,255,255,0.97);
+    border-radius:28px;
+  }
+  .overlay-emoji{ font-size:3.6rem; margin-bottom:10px; }
+  .overlay-title{ font-family:'Baloo 2', sans-serif; font-weight:800; font-size:1.7rem; color:#4C1D95; }
+  .overlay-text{ color:#4B5563; font-weight:600; margin:14px 0 22px; }
+  .explosion-overlay{ background: linear-gradient(135deg, #FEE2E2, #FED7AA); }
+  .explosion-overlay .overlay-title{ color:#B91C1C; }
+  .explosion-shake{ animation: shake .25s infinite; display:inline-block; }
+  @keyframes bigShake{
+    0%,100%{ transform: translate(0,0) rotate(0); }
+    10%{ transform: translate(-6px,4px) rotate(-2deg); }
+    20%{ transform: translate(6px,-4px) rotate(2deg); }
+    30%{ transform: translate(-8px,2px) rotate(-3deg); }
+    40%{ transform: translate(8px,-2px) rotate(3deg); }
+    50%{ transform: translate(-5px,3px) rotate(-1deg); }
+    60%{ transform: translate(5px,-3px) rotate(1deg); }
+    70%{ transform: translate(-3px,2px) rotate(0); }
+    80%{ transform: translate(3px,-2px) rotate(0); }
+    90%{ transform: translate(-1px,1px) rotate(0); }
+  }
+  .card.exploding{ animation: bigShake .5s ease; }
+
   footer{
     text-align:center;
     color:#ffffffcc;
@@ -577,6 +646,7 @@
 
 <div class="app">
   <h2 class="name-heading">🌟 1x1 für Ida 🌟</h2>
+  <div class="coin-badge" id="coinBadge">🪙 <span id="coinBadgeVal">0</span></div>
   <div class="card">
     <h1 class="title" id="mainTitle">🎓 Matheübungen</h1>
     <p class="subtitle" id="subtitleText">Wähle dein Thema</p>
@@ -638,6 +708,7 @@
         <div class="hud-box" id="hud-time"><div class="val" id="timeVal">60</div><div class="lbl">Sekunden</div></div>
         <div class="hud-box" id="hud-score"><div class="val" id="scoreVal">0</div><div class="lbl">Punkte</div></div>
         <div class="hud-box" id="hud-streak"><div class="val" id="streakVal">0</div><div class="lbl">Serie</div></div>
+        <button class="pause-btn" id="pauseBtn1x1" title="Pause">⏸️</button>
       </div>
       <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
 
@@ -661,6 +732,7 @@
       <div class="result-emoji" id="resultEmoji">🏆</div>
       <h2 class="result-title" id="resultTitle">Super gemacht!</h2>
       <div class="new-best" id="newBestBanner" style="display:none;">🌟 Neuer Highscore! 🌟</div>
+      <div class="new-best" id="coinsEarnedBanner1x1" style="display:none;">🪙 +<span id="coinsEarnedVal1x1">0</span> Münzen verdient!</div>
       <div class="stats-grid">
         <div class="stat"><div class="num" id="statScore">0</div><div class="lbl">Punkte</div></div>
         <div class="stat"><div class="num" id="statCorrect">0</div><div class="lbl">Richtig</div></div>
@@ -707,6 +779,7 @@
       <div class="hud">
         <div class="hud-box" id="topic-hud-time"><div class="val" id="topicTimeVal">60</div><div class="lbl">Sekunden</div></div>
         <div class="hud-box" id="topic-hud-score"><div class="val" id="topicScoreVal">0</div><div class="lbl">Richtig</div></div>
+        <button class="pause-btn" id="pauseBtnTopic" title="Pause">⏸️</button>
       </div>
       <div class="timer-track"><div class="timer-fill" id="topicTimerFill"></div></div>
 
@@ -732,6 +805,7 @@
     <section class="section" id="screen-topic-result">
       <div class="result-emoji" id="topicResultEmoji">🏆</div>
       <h2 class="result-title" id="topicResultTitle">Super gemacht!</h2>
+      <div class="new-best" id="coinsEarnedBannerTopic" style="display:none;">🪙 +<span id="coinsEarnedValTopic">0</span> Münzen verdient!</div>
       <div class="stats-grid">
         <div class="stat"><div class="num" id="topicStatCorrect">0</div><div class="lbl">Richtig</div></div>
         <div class="stat"><div class="num" id="topicStatAccuracy">0%</div><div class="lbl">Genauigkeit</div></div>
@@ -756,6 +830,20 @@
       <div class="stats-list" id="topicStatsList"></div>
       <button class="start-btn secondary-btn" id="topicStatsBackBtn">🏠 Zurück</button>
     </section>
+
+    <!-- PAUSE / EXPLOSION overlays (shared across 1x1 and topic games) -->
+    <div class="game-overlay" id="pauseOverlay" style="display:none;">
+      <div class="overlay-emoji">⏸️</div>
+      <div class="overlay-title">Pause</div>
+      <p class="overlay-text">Kurz durchatmen! Du hast deine einzige Pause für diese Runde jetzt benutzt – ein zweites Mal drücken geht nicht gut aus... 😏</p>
+      <button class="start-btn" id="resumeBtn">▶️ Weiter geht's!</button>
+    </div>
+    <div class="game-overlay explosion-overlay" id="explosionOverlay" style="display:none;">
+      <div class="overlay-emoji explosion-shake">💥🤯💥</div>
+      <div class="overlay-title">BUMM!</div>
+      <p class="overlay-text">„Mehr Pause als rechnen geht nicht!!!"</p>
+      <button class="start-btn secondary-btn" id="explosionMenuBtn">🏠 Zurück zum Menü</button>
+    </div>
   </div>
   <footer>Viel Spaß beim Üben! 💪🧠</footer>
 </div>
@@ -796,6 +884,114 @@
   function sfxCorrect(){ beep(880,0.12,'triangle'); setTimeout(()=>beep(1200,0.14,'triangle'),80); }
   function sfxWrong(){ beep(160,0.25,'sawtooth'); }
   function sfxEnd(){ beep(660,0.15,'square'); setTimeout(()=>beep(880,0.15,'square'),150); setTimeout(()=>beep(1100,0.25,'square'),300); }
+  function sfxBoom(){ beep(90,0.4,'sawtooth'); setTimeout(()=>beep(60,0.5,'sawtooth'),120); }
+
+  // ---------- Coins (persistent across the whole session/app) ----------
+  const COINS_KEY = 'einmaleins_blitz_coins_v1';
+  function loadCoins(){ try{ return parseInt(localStorage.getItem(COINS_KEY),10) || 0; }catch(e){ return 0; } }
+  function saveCoins(v){ try{ localStorage.setItem(COINS_KEY, String(v)); }catch(e){} }
+  let totalCoins = loadCoins();
+  const coinBadge = document.getElementById('coinBadge');
+  const coinBadgeVal = document.getElementById('coinBadgeVal');
+  function updateCoinBadge(){ coinBadgeVal.textContent = totalCoins; }
+  function popCoinGain(n){
+    if(n <= 0) return;
+    coinBadge.classList.remove('coin-pop');
+    void coinBadge.offsetWidth;
+    coinBadge.classList.add('coin-pop');
+    const pop = document.createElement('span');
+    pop.className = 'coin-pop-text';
+    pop.textContent = '+' + n;
+    coinBadge.appendChild(pop);
+    setTimeout(()=>pop.remove(), 900);
+  }
+  function addCoins(n){
+    if(n <= 0) return;
+    totalCoins += n;
+    saveCoins(totalCoins);
+    updateCoinBadge();
+    popCoinGain(n);
+  }
+  // Speed bonus for a single answer: faster correct answers earn more coins.
+  function speedCoins(elapsedMs, fastMs, mediumMs){
+    if(elapsedMs < fastMs) return 3;
+    if(elapsedMs < mediumMs) return 2;
+    return 1;
+  }
+  // End-of-round bonus based on overall accuracy.
+  function resultBonusCoins(accuracy){
+    if(accuracy >= 90) return 15;
+    if(accuracy >= 75) return 8;
+    if(accuracy >= 50) return 3;
+    return 0;
+  }
+  updateCoinBadge();
+
+  // ---------- Pause & "explosion" gag (shared across 1x1 and topic games) ----------
+  let activeGameMode = null; // '1x1' | 'topic' | null
+  let pauseUsedThisRound = false;
+  let isPaused = false;
+  let topicAutoAdvancePendingResume = false;
+  const pauseOverlay = document.getElementById('pauseOverlay');
+  const explosionOverlay = document.getElementById('explosionOverlay');
+  const gameCard = document.querySelector('.card');
+
+  function resetPauseForNewRound(){
+    pauseUsedThisRound = false;
+    isPaused = false;
+    pauseOverlay.style.display = 'none';
+    explosionOverlay.style.display = 'none';
+    document.querySelectorAll('.pause-btn').forEach(b=>b.classList.remove('pause-btn-danger'));
+  }
+  function handlePausePress(){
+    if(isPaused || !activeGameMode) return;
+    if(!pauseUsedThisRound){
+      pauseUsedThisRound = true;
+      isPaused = true;
+      if(activeGameMode === '1x1'){ clearInterval(timerId); }
+      else if(activeGameMode === 'topic'){
+        clearInterval(topicTimerId);
+        if(topicAutoAdvanceTimer){ clearTimeout(topicAutoAdvanceTimer); topicAutoAdvancePendingResume = true; }
+      }
+      pauseOverlay.style.display = 'flex';
+    } else {
+      triggerExplosion();
+    }
+  }
+  function resumeFromPause(){
+    isPaused = false;
+    pauseOverlay.style.display = 'none';
+    document.querySelectorAll('.pause-btn').forEach(b=>b.classList.add('pause-btn-danger'));
+    if(activeGameMode === '1x1'){
+      timerId = setInterval(tick, 100);
+    } else if(activeGameMode === 'topic'){
+      topicTimerId = setInterval(topicTick, 100);
+      if(topicAutoAdvancePendingResume){
+        topicAutoAdvancePendingResume = false;
+        topicAutoAdvanceTimer = setTimeout(()=>{
+          topicAwaitingAdvance = false;
+          if(topicRunning) nextTopicQuestion();
+        }, 3000);
+      }
+    }
+  }
+  function triggerExplosion(){
+    isPaused = true;
+    if(activeGameMode === '1x1'){ clearInterval(timerId); running = false; }
+    else if(activeGameMode === 'topic'){ clearInterval(topicTimerId); clearTimeout(topicAutoAdvanceTimer); topicRunning = false; }
+    sfxBoom();
+    gameCard.classList.add('exploding');
+    setTimeout(()=>gameCard.classList.remove('exploding'), 500);
+    explosionOverlay.style.display = 'flex';
+  }
+  document.getElementById('pauseBtn1x1').addEventListener('click', handlePausePress);
+  document.getElementById('pauseBtnTopic').addEventListener('click', handlePausePress);
+  document.getElementById('resumeBtn').addEventListener('click', resumeFromPause);
+  document.getElementById('explosionMenuBtn').addEventListener('click', ()=>{
+    explosionOverlay.style.display = 'none';
+    activeGameMode = null;
+    goToMainMenu();
+  });
 
   // ---------- State ----------
   const screens = {
@@ -985,6 +1181,7 @@
   let running = false;
   let lastComboKey = null;
   let problemStartTime = 0;
+  let session1x1Coins = 0;
 
   const timeVal = document.getElementById('timeVal');
   const scoreVal = document.getElementById('scoreVal');
@@ -1035,6 +1232,9 @@
       bestStreak = Math.max(bestStreak, streak);
       const streakBonus = Math.min(streak, 10);
       score += 10 + streakBonus;
+      const coins = speedCoins(elapsedMs, 2000, 4000);
+      addCoins(coins);
+      session1x1Coins += coins;
       sfxCorrect();
       flashFeedback('correct');
     } else {
@@ -1066,7 +1266,10 @@
     timeLeft = selectedTime;
     score = 0; streak = 0; bestStreak = 0; correctCount = 0; wrongCount = 0;
     misses = {};
+    session1x1Coins = 0;
     running = true;
+    activeGameMode = '1x1';
+    resetPauseForNewRound();
     hudTime.classList.remove('warn');
     updateHud();
     newProblem();
@@ -1096,6 +1299,12 @@
     else { emoji='🌱'; title='Dran bleiben, du schaffst das!'; }
     document.getElementById('resultEmoji').textContent = emoji;
     document.getElementById('resultTitle').textContent = title;
+
+    // End-of-round coin bonus (rewards both speed, via per-answer coins above, and the result)
+    const bonus = resultBonusCoins(accuracy);
+    if(bonus > 0){ addCoins(bonus); session1x1Coins += bonus; }
+    document.getElementById('coinsEarnedBanner1x1').style.display = session1x1Coins > 0 ? 'block' : 'none';
+    document.getElementById('coinsEarnedVal1x1').textContent = session1x1Coins;
 
     // Highscore check
     const scores = loadScores();
@@ -1508,6 +1717,8 @@
   let topicCorrectCount = 0;
   let topicAttemptedCount = 0;
   let topicMisses = {};
+  let topicSessionCoins = 0;
+  let topicQuestionStartTime = 0;
 
   function updateTopicHud(){
     topicTimeVal.textContent = Math.ceil(topicTimeLeft);
@@ -1547,6 +1758,7 @@
   function nextTopicQuestion(){
     if(!topicRunning) return;
     currentQuestion = TOPICS[currentTopicKey].generate();
+    topicQuestionStartTime = performance.now();
     topicQuestionLabel.textContent = currentQuestion.subtypeLabel;
     renderContext(currentQuestion);
     renderPartControls(currentQuestion);
@@ -1561,7 +1773,10 @@
     topicCorrectCount = 0;
     topicAttemptedCount = 0;
     topicMisses = {};
+    topicSessionCoins = 0;
     topicRunning = true;
+    activeGameMode = 'topic';
+    resetPauseForNewRound();
     topicAwaitingAdvance = false;
     clearTimeout(topicAutoAdvanceTimer);
     topicHudTime.classList.remove('warn');
@@ -1582,6 +1797,11 @@
     topicAttemptedCount++;
     if(overallCorrect){
       topicCorrectCount++;
+      const elapsedMs = performance.now() - topicQuestionStartTime;
+      const partCount = q.parts.length;
+      const coins = speedCoins(elapsedMs, 3000 + 2500*(partCount-1), 6000 + 3500*(partCount-1));
+      addCoins(coins);
+      topicSessionCoins += coins;
       sfxCorrect();
       flashTopicFeedback('correct');
     } else {
@@ -1680,6 +1900,11 @@
     else { emoji='🌱'; title='Dran bleiben, du schaffst das!'; }
     document.getElementById('topicResultEmoji').textContent = emoji;
     document.getElementById('topicResultTitle').textContent = title;
+
+    const bonus = resultBonusCoins(accuracy);
+    if(bonus > 0){ addCoins(bonus); topicSessionCoins += bonus; }
+    document.getElementById('coinsEarnedBannerTopic').style.display = topicSessionCoins > 0 ? 'block' : 'none';
+    document.getElementById('coinsEarnedValTopic').textContent = topicSessionCoins;
 
     const missListEl = document.getElementById('topicMissList');
     const missItemsEl = document.getElementById('topicMissItems');
