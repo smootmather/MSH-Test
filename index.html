@@ -529,6 +529,33 @@
 
   .worksheet-hint{ text-align:center; color:#6B7280; font-weight:600; font-size:0.85rem; margin-top:12px; }
 
+  /* --- Sequential answer parts (keypad/choice-driven, no separate Prüfen) --- */
+  .mini-input-display{
+    display:flex; align-items:center; justify-content:center;
+    width:52px; min-height:40px;
+    font-family:'Baloo 2', sans-serif; font-weight:800; font-size:1.05rem;
+    border-radius:12px; border:3px solid #E5E7EB; color:#312E81; background:#F9FAFB;
+  }
+  .mini-input-display.part-active{ border-color:#A78BFA; background:#fff; box-shadow:0 0 0 3px #A78BFA33; animation: pulseSlot 1s ease-in-out infinite; }
+  .mini-input-display.part-pending{ opacity:.45; }
+  .mini-input-display.field-correct{ background:#F0FDF4; border-color:#22C55E; color:#166534; }
+  .mini-input-display.field-wrong{ background:#FEF2F2; border-color:#EF4444; color:#991B1B; }
+  @keyframes pulseSlot{ 0%,100%{ box-shadow:0 0 0 3px #A78BFA33; } 50%{ box-shadow:0 0 0 6px #A78BFA55; } }
+
+  .rule-slot{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:30px; padding:3px 8px; margin:0 2px;
+    border-radius:8px; border:2px solid #E5E7EB; background:#F9FAFB; color:#312E81; font-weight:800;
+  }
+  .rule-slot.part-active{ border-color:#A78BFA; background:#fff; box-shadow:0 0 0 3px #A78BFA33; }
+  .rule-slot.part-pending{ opacity:.45; }
+  .rule-slot.field-correct{ background:#F0FDF4; border-color:#22C55E; color:#166534; }
+  .rule-slot.field-wrong{ background:#FEF2F2; border-color:#EF4444; color:#991B1B; }
+
+  .toggle-chip.part-active{ border-color:#A78BFA; background:#fff; color:#374151; box-shadow:0 0 0 3px #A78BFA33; animation: pulseSlot 1s ease-in-out infinite; cursor:default; }
+  .toggle-chip.part-pending{ opacity:.45; cursor:default; }
+  #topic-hud-time.warn .val{ color:var(--danger); animation: shake .4s infinite; }
+
   footer{
     text-align:center;
     color:#ffffffcc;
@@ -664,11 +691,12 @@
     <!-- TOPIC START SCREEN (shared: Teilbarkeit / Primzahlen) -->
     <section class="section" id="screen-topic-start">
       <button class="topic-back-btn" id="backFromTopicStart">🏠 Hauptmenü</button>
-      <div class="field-label">📝 Wie viele Aufgaben?</div>
-      <div class="chip-row" id="topic-count-chips">
-        <div class="chip" data-count="8">8</div>
-        <div class="chip selected" data-count="12">12</div>
-        <div class="chip" data-count="16">16</div>
+      <div class="field-label">🎯 Wähle deine Zeit</div>
+      <div class="chip-row" id="topic-time-chips">
+        <div class="chip" data-time="30">30 Sek</div>
+        <div class="chip selected" data-time="60">60 Sek</div>
+        <div class="chip" data-time="90">90 Sek</div>
+        <div class="chip" data-time="120">120 Sek</div>
       </div>
       <button class="start-btn" id="topicStartBtn">🚀 Los geht's!</button>
       <button class="start-btn secondary-btn stats-link-btn" id="topicStatsBtn">📊 Statistik ansehen</button>
@@ -677,10 +705,10 @@
     <!-- TOPIC GAME SCREEN (shared: Teilbarkeit / Primzahlen) -->
     <section class="section" id="screen-topic-game">
       <div class="hud">
-        <div class="hud-box"><div class="val" id="topicProgressVal">1 / 12</div><div class="lbl">Aufgabe</div></div>
+        <div class="hud-box" id="topic-hud-time"><div class="val" id="topicTimeVal">60</div><div class="lbl">Sekunden</div></div>
         <div class="hud-box" id="topic-hud-score"><div class="val" id="topicScoreVal">0</div><div class="lbl">Richtig</div></div>
       </div>
-      <div class="timer-track"><div class="timer-fill" id="topicProgressFill" style="background:linear-gradient(90deg,#7C3AED,#EC4899); width:0%;"></div></div>
+      <div class="timer-track"><div class="timer-fill" id="topicTimerFill"></div></div>
 
       <div class="problem-card" id="topicQuestionCard">
         <div class="feedback-flash" id="topicFlash"></div>
@@ -688,7 +716,15 @@
         <div id="worksheetQuestion"></div>
       </div>
 
-      <button class="start-btn" id="checkBtn">✅ Prüfen</button>
+      <input type="text" inputmode="none" class="answer-input" id="topicAnswerInput" placeholder="?" autocomplete="off" maxlength="4" style="display:none;">
+      <div class="keypad" id="topicKeypad" style="display:none;">
+        <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+        <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+        <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+        <button class="key del" data-k="del">⌫</button><button class="key" data-k="0">0</button><button class="key enter" data-k="enter">✓</button>
+      </div>
+      <div class="btn-row" id="topicChoiceBtns" style="display:none;"></div>
+
       <button class="start-btn" id="nextBtn" style="display:none;">➡️ Weiter</button>
     </section>
 
@@ -1137,9 +1173,13 @@
 
   // =========================================================================
   // ---------- Worksheet topics: Teilbarkeit & Primzahlen ----------
-  // Untimed, worksheet-style sessions (fixed number of tasks, "Prüfen" /
-  // "Weiter" per task) — a different rhythm from the timed 1x1 game, closer
-  // to how the tasks look on paper.
+  // Timed sessions (like the 1x1 game) made of small worksheet-style
+  // questions. Each question is a sequence of "parts" (one blank or one
+  // yes/no choice at a time); answering a part is itself the submit action
+  // (keypad ✓ or a choice button) — there is no separate "Prüfen" button.
+  // Numbers are always entered via the on-screen keypad, never the OS
+  // keyboard. A fully correct question auto-advances after 3s; a wrong one
+  // waits for the child to tap "Weiter".
   // =========================================================================
 
   function getDivisors(n){
@@ -1153,78 +1193,86 @@
     for(let i=3;i*i<=n;i+=2){ if(n % i === 0) return false; }
     return true;
   }
-  function getPrimeFactors(n){
-    const factors = [];
-    let x = n, d = 2;
-    while(d*d <= x){
-      while(x % d === 0){ factors.push(d); x/=d; }
-      d++;
-    }
-    if(x > 1) factors.push(x);
-    return factors;
-  }
 
   // ----- Teilbarkeit generators -----
   function genDivTable(){
     const n = randInt(100, 99999);
-    return {
-      subtype:'divtable', subtypeLabel:'Teilbarkeit-Tabelle',
-      data:{ n, answer:{ 2:(n%2===0), 5:(n%5===0), 10:(n%10===0) } }
-    };
+    const cols = [2,5,10];
+    const parts = cols.map(function(m){
+      return {
+        kind:'choice',
+        options:[{label:'✅ Ja',val:'yes'},{label:'❌ Nein',val:'no'}],
+        expected: (n % m === 0) ? 'yes' : 'no'
+      };
+    });
+    return { subtype:'divtable', subtypeLabel:'Teilbarkeit-Tabelle', context:{ n, cols }, parts, partIndex:0, partResults:[] };
   }
   function genTeilerhaus(){
     let n, divs, tries=0;
     do{ n = randInt(8,90); divs = getDivisors(n); tries++; }
     while((divs.length<4 || divs.length>8) && tries<50);
-    return { subtype:'teilerhaus', subtypeLabel:'Teilerhaus', data:{ n, divisors:divs } };
+    const parts = divs.map(function(d){ return { kind:'number', expected:d }; });
+    return { subtype:'teilerhaus', subtypeLabel:'Teilerhaus', context:{ n, divisors:divs }, parts, partIndex:0, partResults:[] };
   }
   const RULE_SENTENCES = [
-    { template:'Wenn eine Zahl durch 10 teilbar ist, dann ist sie immer auch durch {0} teilbar.',
-      blanks:[{ multi:true, values:['2','5'], hint:'2 und 5' }] },
-    { template:'Zahlen mit einer {0} an der Einerstelle kann man durch 2 teilen.',
-      blanks:[{ multi:true, values:['0','2','4','6','8'], hint:'0, 2, 4, 6 oder 8' }] },
+    { template:'Wenn eine Zahl durch 10 teilbar ist, dann ist sie immer auch durch {0} und durch {1} teilbar.',
+      parts:[ {kind:'number', expected:2}, {kind:'number', expected:5} ] },
+    { template:'Zahlen mit einer {0}, {1}, {2}, {3} oder {4} an der Einerstelle kann man durch 2 teilen.',
+      parts:[0,2,4,6,8].map(function(v){ return {kind:'number', expected:v}; }) },
     { template:'Alle Zahlen, die man durch 2 teilen kann, heißen {0} Zahlen.',
-      blanks:[{ accept:['gerade'], hint:'gerade' }] },
-    { template:'Zahlen mit einer {0} an der Einerstelle kann man durch 5 teilen.',
-      blanks:[{ multi:true, values:['0','5'], hint:'0 oder 5' }] },
+      parts:[ {kind:'choice', options:[{label:'gerade',val:'gerade'},{label:'ungerade',val:'ungerade'}], expected:'gerade'} ] },
+    { template:'Zahlen mit einer {0} oder einer {1} an der Einerstelle kann man durch 5 teilen.',
+      parts:[ {kind:'number', expected:0}, {kind:'number', expected:5} ] },
     { template:'Zahlen mit einer {0} an der Einerstelle kann man durch 10 teilen.',
-      blanks:[{ accept:['0'], hint:'0' }] },
+      parts:[ {kind:'number', expected:0} ] },
   ];
   function genRegel(){
     const rule = RULE_SENTENCES[randInt(0, RULE_SENTENCES.length-1)];
-    return { subtype:'regel', subtypeLabel:'Regel-Lücke', data:{ rule } };
+    const parts = rule.parts.map(function(p){
+      return p.kind === 'number' ? { kind:'number', expected:p.expected } : { kind:'choice', options:p.options, expected:p.expected };
+    });
+    return { subtype:'regel', subtypeLabel:'Regel-Lücke', context:{ template: rule.template }, parts, partIndex:0, partResults:[] };
   }
   function genMengen(){
     const kind = Math.random() < 0.5 ? 'teiler' : 'vielfache';
+    let n, sequence, blankIndices;
     if(kind === 'teiler'){
-      let n, divs, tries=0;
+      let divs, tries=0;
       do{ n = randInt(12,90); divs = getDivisors(n); tries++; }
       while((divs.length<4 || divs.length>8) && tries<50);
+      sequence = divs;
       const blankCount = Math.min(3, Math.max(2, Math.floor(divs.length/2)), divs.length-1);
-      const indices = [];
-      while(indices.length < blankCount){
+      blankIndices = [];
+      while(blankIndices.length < blankCount){
         const idx = randInt(1, divs.length-1); // keep "1" always shown
-        if(!indices.includes(idx)) indices.push(idx);
+        if(!blankIndices.includes(idx)) blankIndices.push(idx);
       }
-      return { subtype:'mengen', subtypeLabel:'Teilermenge', data:{ kind, n, sequence:divs, blankIndices:indices } };
     } else {
-      const n = randInt(2,15);
-      const seq = [];
-      for(let k=1;k<=8;k++) seq.push(n*k);
-      const blankCount = 3;
-      const indices = [];
-      while(indices.length < blankCount){
-        const idx = randInt(0, seq.length-1);
-        if(!indices.includes(idx)) indices.push(idx);
+      n = randInt(2,15);
+      sequence = [];
+      for(let k=1;k<=8;k++) sequence.push(n*k);
+      blankIndices = [];
+      while(blankIndices.length < 3){
+        const idx = randInt(0, sequence.length-1);
+        if(!blankIndices.includes(idx)) blankIndices.push(idx);
       }
-      return { subtype:'mengen', subtypeLabel:'Vielfachenmenge', data:{ kind, n, sequence:seq, blankIndices:indices } };
     }
+    blankIndices.sort(function(a,b){ return a-b; });
+    const parts = blankIndices.map(function(idx){ return { kind:'number', expected: sequence[idx] }; });
+    return {
+      subtype:'mengen', subtypeLabel: kind==='teiler' ? 'Teilermenge' : 'Vielfachenmenge',
+      context:{ kind, n, sequence, blankIndices }, parts, partIndex:0, partResults:[]
+    };
   }
 
   // ----- Primzahlen generators -----
   function genIsPrime(){
     const n = randInt(2, 100);
-    return { subtype:'isprime', subtypeLabel:'Primzahl erkennen', data:{ n, answer:isPrimeNum(n) } };
+    return {
+      subtype:'isprime', subtypeLabel:'Primzahl erkennen', context:{ n },
+      parts:[{ kind:'choice', options:[{label:'✅ Ja, Primzahl',val:'yes'},{label:'❌ Keine Primzahl',val:'no'}], expected: isPrimeNum(n) ? 'yes' : 'no' }],
+      partIndex:0, partResults:[]
+    };
   }
   function genPrimeGrid(){
     const numbers = [];
@@ -1232,9 +1280,10 @@
       const n = randInt(2,100);
       if(!numbers.includes(n)) numbers.push(n);
     }
-    const answer = {};
-    numbers.forEach(n=>{ answer[n] = isPrimeNum(n); });
-    return { subtype:'grid', subtypeLabel:'Primzahlen finden', data:{ numbers, answer } };
+    const parts = numbers.map(function(n){
+      return { kind:'choice', options:[{label:'✅ Ja',val:'yes'},{label:'❌ Nein',val:'no'}], expected: isPrimeNum(n) ? 'yes' : 'no' };
+    });
+    return { subtype:'grid', subtypeLabel:'Primzahlen finden', context:{ numbers }, parts, partIndex:0, partResults:[] };
   }
   function genFactorize(){
     const smallPrimes = [2,3,5,7,11,13];
@@ -1250,10 +1299,11 @@
         chosen.push(p);
       }
       n = product;
-      factors = chosen.sort((a,b)=>a-b);
+      factors = chosen.sort(function(a,b){ return a-b; });
       tries++;
     } while((factors.length < 2 || n < 4) && tries < 50);
-    return { subtype:'factorize', subtypeLabel:'Primfaktorzerlegung', data:{ n, factors } };
+    const parts = factors.map(function(f){ return { kind:'number', expected:f }; });
+    return { subtype:'factorize', subtypeLabel:'Primfaktorzerlegung', context:{ n, factors }, parts, partIndex:0, partResults:[] };
   }
 
   const TOPICS = {
@@ -1271,21 +1321,18 @@
     }
   };
 
-  // ----- Rendering & checking questions -----
+  // ----- DOM refs -----
   const worksheetBox = document.getElementById('worksheetQuestion');
   const topicQuestionLabel = document.getElementById('topicQuestionLabel');
-  const checkBtn = document.getElementById('checkBtn');
-  const nextBtn = document.getElementById('nextBtn');
   const topicFlash = document.getElementById('topicFlash');
-
-  let currentTopicKey = null;
-  let currentQuestion = null;
-  let checked = false;
-  let topicQuestionIndex = 0;
-  let topicTotalQuestions = 12;
-  let topicSelectedCount = 12;
-  let topicCorrectCount = 0;
-  let topicMisses = {};
+  const topicAnswerInput = document.getElementById('topicAnswerInput');
+  const topicKeypad = document.getElementById('topicKeypad');
+  const topicChoiceBtns = document.getElementById('topicChoiceBtns');
+  const nextBtn = document.getElementById('nextBtn');
+  const topicTimeVal = document.getElementById('topicTimeVal');
+  const topicTimerFill = document.getElementById('topicTimerFill');
+  const topicHudTime = document.getElementById('topic-hud-time');
+  const topicScoreVal = document.getElementById('topicScoreVal');
 
   function flashTopicFeedback(type){
     topicFlash.className = 'feedback-flash ' + type;
@@ -1293,212 +1340,117 @@
     topicFlash.classList.add(type);
   }
 
-  function renderWorksheetQuestion(q){
-    checked = false;
-    topicQuestionLabel.textContent = q.subtypeLabel;
-    checkBtn.style.display = 'block';
-    nextBtn.style.display = 'none';
-
+  // ----- Rendering the question context (shows part states: pending/active/done) -----
+  function renderContext(q){
     if(q.subtype === 'divtable'){
+      const chips = q.context.cols.map(function(m,i){
+        let cls = 'toggle-chip';
+        let label = ': ' + m;
+        if(i < q.partIndex){ cls += ' ' + (q.partResults[i] ? 'field-correct' : 'field-wrong'); label += (q.partResults[i] ? ' ✓' : ' ✗'); }
+        else if(i === q.partIndex){ cls += ' part-active'; }
+        else { cls += ' part-pending'; }
+        return '<div class="'+cls+'">'+label+'</div>';
+      }).join('');
+      const currentM = q.context.cols[q.partIndex];
+      const hint = currentM !== undefined ? ('Ist '+q.context.n+' durch '+currentM+' teilbar?') : '';
       worksheetBox.innerHTML =
-        '<div class="problem" style="font-size:2.2rem;margin:6px 0 14px;">'+q.data.n+'</div>'
-        + '<div class="chip-row">'
-        + '<div class="toggle-chip" data-col="2">: 2</div>'
-        + '<div class="toggle-chip" data-col="5">: 5</div>'
-        + '<div class="toggle-chip" data-col="10">: 10</div>'
-        + '</div>';
+        '<div class="problem" style="font-size:2.2rem;margin:6px 0 14px;">'+q.context.n+'</div>'
+        + '<div class="chip-row">'+chips+'</div>'
+        + '<div class="worksheet-hint">'+hint+'</div>';
     }
-    else if(q.subtype === 'teilerhaus'){
-      let boxes = '';
-      for(let i=0;i<q.data.divisors.length;i++){
-        boxes += '<input type="text" inputmode="numeric" class="mini-input divisor-box" data-idx="'+i+'" autocomplete="off" maxlength="3">';
-      }
-      worksheetBox.innerHTML =
-        '<div class="house-label">Teiler von <strong>'+q.data.n+'</strong></div>'
-        + '<div class="divisor-grid">'+boxes+'</div>';
-    }
-    else if(q.subtype === 'regel'){
-      let idx = 0;
-      const html = q.data.rule.template.replace(/\{0\}/g, function(){
-        return '<input type="text" class="mini-input rule-input" data-bidx="'+(idx++)+'" autocomplete="off">';
+    else if(q.subtype === 'teilerhaus' || q.subtype === 'factorize'){
+      const isFact = q.subtype === 'factorize';
+      const label = isFact
+        ? ('Primfaktorzerlegung von <strong>'+q.context.n+'</strong>')
+        : ('Teiler von <strong>'+q.context.n+'</strong>');
+      const wrapClass = isFact ? 'factor-row' : 'divisor-grid';
+      let html = '';
+      q.parts.forEach(function(part, i){
+        if(isFact && i>0) html += '<div class="factor-x">×</div>';
+        let cls = 'mini-input-display';
+        let text = '?';
+        if(i < q.partIndex){ cls += ' ' + (q.partResults[i] ? 'field-correct' : 'field-wrong'); text = (part._entered === undefined || part._entered === '') ? '?' : part._entered; }
+        else if(i === q.partIndex){ cls += ' part-active'; }
+        else { cls += ' part-pending'; }
+        html += '<div class="'+cls+'">'+text+'</div>';
       });
-      worksheetBox.innerHTML = '<div class="rule-sentence">'+html+'</div>';
+      worksheetBox.innerHTML = '<div class="house-label">'+label+'</div><div class="'+wrapClass+'">'+html+'</div>';
     }
     else if(q.subtype === 'mengen'){
-      const { kind, n, sequence, blankIndices } = q.data;
+      const kind = q.context.kind, n = q.context.n, sequence = q.context.sequence, blankIndices = q.context.blankIndices;
       const setLabel = (kind === 'teiler' ? 'T' : 'V') + '<sub>'+n+'</sub> =';
+      let blankPos = -1;
       const cells = sequence.map(function(val, i){
-        if(blankIndices.includes(i)){
-          return '<input type="text" inputmode="numeric" class="mini-input seq-box" data-idx="'+i+'" autocomplete="off" maxlength="4">';
-        }
-        return '<div class="seq-fixed">'+val+'</div>';
+        const bIdx = blankIndices.indexOf(i);
+        if(bIdx === -1) return '<div class="seq-fixed">'+val+'</div>';
+        blankPos++;
+        const part = q.parts[bIdx];
+        let cls = 'mini-input-display';
+        let text = '?';
+        if(bIdx < q.partIndex){ cls += ' ' + (q.partResults[bIdx] ? 'field-correct' : 'field-wrong'); text = (part._entered === undefined || part._entered === '') ? '?' : part._entered; }
+        else if(bIdx === q.partIndex){ cls += ' part-active'; }
+        else { cls += ' part-pending'; }
+        return '<div class="'+cls+'">'+text+'</div>';
       }).join('');
       const tail = kind === 'vielfache' ? '<div class="seq-fixed">…</div>' : '';
       worksheetBox.innerHTML =
         '<div class="seq-row"><div class="seq-set-label">'+setLabel+'</div><div class="seq-brace">{</div>'
         + cells + tail + '<div class="seq-brace">}</div></div>';
     }
-    else if(q.subtype === 'isprime'){
-      worksheetBox.innerHTML =
-        '<div class="problem" style="font-size:2.6rem;margin:6px 0 16px;">'+q.data.n+'</div>'
-        + '<div class="btn-row">'
-        + '<button class="start-btn secondary-btn prime-choice" data-choice="yes">✅ Ja, Primzahl</button>'
-        + '<button class="start-btn secondary-btn prime-choice" data-choice="no">❌ Keine Primzahl</button>'
-        + '</div>';
-    }
-    else if(q.subtype === 'grid'){
-      const chips = q.data.numbers.map(function(n){
-        return '<div class="toggle-chip prime-chip" data-num="'+n+'">'+n+'</div>';
-      }).join('');
-      worksheetBox.innerHTML = '<div class="prime-grid">'+chips+'</div>';
-    }
-    else if(q.subtype === 'factorize'){
-      let boxes = '';
-      for(let i=0;i<q.data.factors.length;i++){
-        if(i>0) boxes += '<div class="factor-x">×</div>';
-        boxes += '<input type="text" inputmode="numeric" class="mini-input factor-box" data-idx="'+i+'" autocomplete="off" maxlength="3">';
-      }
-      worksheetBox.innerHTML =
-        '<div class="house-label">Primfaktorzerlegung von <strong>'+q.data.n+'</strong></div>'
-        + '<div class="factor-row">'+boxes+'</div>';
-    }
-  }
-
-  function checkWorksheetQuestion(q){
-    let correct = false;
-    if(q.subtype === 'divtable'){
-      const chips = worksheetBox.querySelectorAll('.toggle-chip[data-col]');
-      let allMatch = true;
-      chips.forEach(function(chip){
-        const shouldMark = q.data.answer[chip.dataset.col];
-        const userMarked = chip.classList.contains('active');
-        chip.classList.add(userMarked === shouldMark ? 'field-correct' : 'field-wrong');
-        if(userMarked !== shouldMark) allMatch = false;
-      });
-      correct = allMatch;
-    }
-    else if(q.subtype === 'teilerhaus'){
-      const boxes = worksheetBox.querySelectorAll('.divisor-box');
-      const divisorSet = new Set(q.data.divisors);
-      const claimed = new Set();
-      let allBoxesCorrect = true;
-      boxes.forEach(function(inp){
-        const val = parseInt(inp.value, 10);
-        if(!isNaN(val) && divisorSet.has(val) && !claimed.has(val)){
-          inp.classList.add('field-correct');
-          claimed.add(val);
-        } else {
-          inp.classList.add('field-wrong');
-          allBoxesCorrect = false;
-        }
-      });
-      correct = allBoxesCorrect && claimed.size === divisorSet.size;
-      if(!correct){
-        const missing = q.data.divisors.filter(function(d){ return !claimed.has(d); });
-        if(missing.length){
-          const info = document.createElement('div');
-          info.className = 'worksheet-hint';
-          info.textContent = 'Fehlt noch: ' + missing.join(', ');
-          worksheetBox.appendChild(info);
-        }
-      }
-    }
     else if(q.subtype === 'regel'){
-      const inputs = worksheetBox.querySelectorAll('.rule-input');
-      let allMatch = true;
-      inputs.forEach(function(inp){
-        const blank = q.data.rule.blanks[parseInt(inp.dataset.bidx,10)];
-        const norm = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
-        let ok = false;
-        if(blank.multi){
-          const parts = norm.replace(/\bund\b/g,',').replace(/\boder\b/g,',')
-            .split(/[,\s]+/).map(function(s){ return s.trim(); }).filter(Boolean);
-          const setUser = new Set(parts);
-          ok = setUser.size === blank.values.length && blank.values.every(function(v){ return setUser.has(v); });
-        } else {
-          ok = blank.accept.indexOf(norm) !== -1;
-        }
-        inp.classList.add(ok ? 'field-correct' : 'field-wrong');
-        if(!ok) allMatch = false;
+      const html = q.context.template.replace(/\{(\d+)\}/g, function(_, idxStr){
+        const idx = parseInt(idxStr,10);
+        const part = q.parts[idx];
+        let cls = 'rule-slot';
+        let text = '?';
+        if(idx < q.partIndex){ cls += ' ' + (q.partResults[idx] ? 'field-correct' : 'field-wrong'); text = (part._entered === undefined || part._entered === '') ? '?' : part._entered; }
+        else if(idx === q.partIndex){ cls += ' part-active'; }
+        else { cls += ' part-pending'; }
+        return '<span class="'+cls+'">'+text+'</span>';
       });
-      correct = allMatch;
-      if(!correct){
-        const hints = q.data.rule.blanks.map(function(b){ return b.hint; }).join(', ');
-        const info = document.createElement('div');
-        info.className = 'worksheet-hint';
-        info.textContent = 'Richtig wäre: ' + hints;
-        worksheetBox.appendChild(info);
-      }
-    }
-    else if(q.subtype === 'mengen'){
-      const inputs = worksheetBox.querySelectorAll('.seq-box');
-      let allMatch = true;
-      inputs.forEach(function(inp){
-        const idx = parseInt(inp.dataset.idx,10);
-        const ok = parseInt(inp.value,10) === q.data.sequence[idx];
-        inp.classList.add(ok ? 'field-correct' : 'field-wrong');
-        if(!ok) allMatch = false;
-      });
-      correct = allMatch;
+      worksheetBox.innerHTML = '<div class="rule-sentence">'+html+'</div>';
     }
     else if(q.subtype === 'isprime'){
-      const userChoice = q._userChoice;
-      correct = (userChoice === 'yes') === q.data.answer;
-      worksheetBox.querySelectorAll('.prime-choice').forEach(function(btn){
-        const isYes = btn.dataset.choice === 'yes';
-        if(isYes === q.data.answer) btn.classList.add('field-correct');
-        else if(btn.dataset.choice === userChoice) btn.classList.add('field-wrong');
-      });
+      worksheetBox.innerHTML =
+        '<div class="problem" style="font-size:2.6rem;margin:6px 0 10px;">'+q.context.n+'</div>'
+        + '<div class="worksheet-hint">Ist das eine Primzahl?</div>';
     }
     else if(q.subtype === 'grid'){
-      const chips = worksheetBox.querySelectorAll('.prime-chip');
-      let allMatch = true;
-      chips.forEach(function(chip){
-        const n = parseInt(chip.dataset.num,10);
-        const shouldMark = q.data.answer[n];
-        const userMarked = chip.classList.contains('active');
-        chip.classList.add(userMarked === shouldMark ? 'field-correct' : 'field-wrong');
-        if(userMarked !== shouldMark) allMatch = false;
-      });
-      correct = allMatch;
+      const chips = q.context.numbers.map(function(n,i){
+        let cls = 'toggle-chip prime-chip';
+        if(i < q.partIndex){ cls += ' ' + (q.partResults[i] ? 'field-correct' : 'field-wrong'); }
+        else if(i === q.partIndex){ cls += ' part-active'; }
+        else { cls += ' part-pending'; }
+        return '<div class="'+cls+'">'+n+'</div>';
+      }).join('');
+      const current = q.context.numbers[q.partIndex];
+      const hint = current !== undefined ? ('Ist <strong>'+current+'</strong> eine Primzahl?') : '';
+      worksheetBox.innerHTML = '<div class="prime-grid">'+chips+'</div><div class="worksheet-hint">'+hint+'</div>';
     }
-    else if(q.subtype === 'factorize'){
-      const boxes = worksheetBox.querySelectorAll('.factor-box');
-      const remaining = q.data.factors.slice().sort(function(a,b){ return a-b; });
-      const userVals = Array.prototype.map.call(boxes, function(b){ return parseInt(b.value,10); });
-      correct = remaining.length === userVals.length
-        && remaining.every(function(v,i){ return v === userVals.slice().sort(function(a,b){return a-b;})[i]; });
-      boxes.forEach(function(inp){
-        const val = parseInt(inp.value,10);
-        const pos = remaining.indexOf(val);
-        if(pos !== -1){ inp.classList.add('field-correct'); remaining.splice(pos,1); }
-        else inp.classList.add('field-wrong');
-      });
-    }
-    return correct;
   }
 
-  function lockWorksheetInputs(){
-    worksheetBox.querySelectorAll('input').forEach(function(inp){ inp.readOnly = true; });
+  function renderPartControls(q){
+    const part = q.parts[q.partIndex];
+    if(!part){
+      topicAnswerInput.style.display = 'none';
+      topicKeypad.style.display = 'none';
+      topicChoiceBtns.style.display = 'none';
+      return;
+    }
+    if(part.kind === 'number'){
+      topicChoiceBtns.style.display = 'none';
+      topicAnswerInput.style.display = 'block';
+      topicKeypad.style.display = 'grid';
+      topicAnswerInput.value = '';
+    } else {
+      topicAnswerInput.style.display = 'none';
+      topicKeypad.style.display = 'none';
+      topicChoiceBtns.style.display = 'flex';
+      topicChoiceBtns.innerHTML = part.options.map(function(opt){
+        return '<button class="start-btn secondary-btn topic-choice-btn" data-val="'+opt.val+'" style="margin-top:0;">'+opt.label+'</button>';
+      }).join('');
+    }
   }
-
-  worksheetBox.addEventListener('click', function(e){
-    if(checked) return;
-    const chip = e.target.closest('.toggle-chip');
-    if(chip){ chip.classList.toggle('active'); return; }
-    const choice = e.target.closest('.prime-choice');
-    if(choice){
-      worksheetBox.querySelectorAll('.prime-choice').forEach(function(b){ b.classList.remove('selected'); });
-      choice.classList.add('selected');
-      currentQuestion._userChoice = choice.dataset.choice;
-    }
-  });
-  worksheetBox.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      (checked ? nextBtn : checkBtn).click();
-    }
-  });
 
   // ----- Per-topic subtype stats (localStorage) -----
   function loadTopicStats(topicKey){
@@ -1514,7 +1466,8 @@
   function renderTopicStats(topicKey){
     const topic = TOPICS[topicKey];
     const stats = loadTopicStats(topicKey);
-    const entries = Object.entries(stats).map(function([subtype, s]){
+    const entries = Object.entries(stats).map(function(entry){
+      const subtype = entry[0], s = entry[1];
       const accuracy = s.attempts ? Math.round((s.correct/s.attempts)*100) : 0;
       const wrongRate = s.attempts ? (s.wrong/s.attempts) : 0;
       return { label: topic.subtypeLabels[subtype] || subtype, attempts:s.attempts, accuracy, wrongRate };
@@ -1542,7 +1495,36 @@
     }).join('');
   }
 
-  // ----- Session flow -----
+  // ----- Session state -----
+  let currentTopicKey = null;
+  let currentQuestion = null;
+  let topicRunning = false;
+  let topicAwaitingAdvance = false; // true while showing feedback (correct 3s pause, or wrong waiting for tap)
+  let topicAutoAdvanceTimer = null;
+  let topicTimeLeft = 60;
+  let topicTotalTime = 60;
+  let topicSelectedTime = 60;
+  let topicTimerId = null;
+  let topicCorrectCount = 0;
+  let topicAttemptedCount = 0;
+  let topicMisses = {};
+
+  function updateTopicHud(){
+    topicTimeVal.textContent = Math.ceil(topicTimeLeft);
+    topicTimerFill.style.width = Math.max(0,(topicTimeLeft/topicTotalTime*100)) + '%';
+    topicHudTime.classList.toggle('warn', topicTimeLeft <= 10);
+  }
+  function topicTick(){
+    topicTimeLeft -= 0.1;
+    if(topicTimeLeft <= 0){
+      topicTimeLeft = 0;
+      updateTopicHud();
+      endTopicSession();
+      return;
+    }
+    updateTopicHud();
+  }
+
   function openTopic(key){
     currentTopicKey = key;
     setHeader(TOPICS[key].label, TOPICS[key].subtitle);
@@ -1554,65 +1536,145 @@
   document.getElementById('topicMenuBtn').addEventListener('click', goToMainMenu);
   document.getElementById('topicStatsBackBtn').addEventListener('click', function(){ showScreen('topicStart'); });
 
-  document.getElementById('topic-count-chips').addEventListener('click', function(e){
+  document.getElementById('topic-time-chips').addEventListener('click', function(e){
     const chip = e.target.closest('.chip');
     if(!chip) return;
-    document.querySelectorAll('#topic-count-chips .chip').forEach(function(c){ c.classList.remove('selected'); });
+    document.querySelectorAll('#topic-time-chips .chip').forEach(function(c){ c.classList.remove('selected'); });
     chip.classList.add('selected');
-    topicSelectedCount = parseInt(chip.dataset.count,10);
+    topicSelectedTime = parseInt(chip.dataset.time,10);
   });
 
   function nextTopicQuestion(){
-    if(topicQuestionIndex >= topicTotalQuestions){ endTopicSession(); return; }
-    topicQuestionIndex++;
+    if(!topicRunning) return;
     currentQuestion = TOPICS[currentTopicKey].generate();
-    document.getElementById('topicProgressVal').textContent = topicQuestionIndex + ' / ' + topicTotalQuestions;
-    document.getElementById('topicScoreVal').textContent = topicCorrectCount;
-    document.getElementById('topicProgressFill').style.width = Math.round((topicQuestionIndex-1)/topicTotalQuestions*100) + '%';
-    renderWorksheetQuestion(currentQuestion);
+    topicQuestionLabel.textContent = currentQuestion.subtypeLabel;
+    renderContext(currentQuestion);
+    renderPartControls(currentQuestion);
+    if(currentQuestion.parts[0] && currentQuestion.parts[0].kind === 'number'){
+      setTimeout(function(){ topicAnswerInput.focus(); }, 30);
+    }
   }
 
   function startTopicSession(){
-    topicTotalQuestions = topicSelectedCount;
-    topicQuestionIndex = 0;
+    topicTotalTime = topicSelectedTime;
+    topicTimeLeft = topicSelectedTime;
     topicCorrectCount = 0;
+    topicAttemptedCount = 0;
     topicMisses = {};
+    topicRunning = true;
+    topicAwaitingAdvance = false;
+    clearTimeout(topicAutoAdvanceTimer);
+    topicHudTime.classList.remove('warn');
+    topicScoreVal.textContent = '0';
+    updateTopicHud();
+    nextBtn.style.display = 'none';
     showScreen('topicGame');
     nextTopicQuestion();
+    clearInterval(topicTimerId);
+    topicTimerId = setInterval(topicTick, 100);
   }
   document.getElementById('topicStartBtn').addEventListener('click', startTopicSession);
   document.getElementById('topicRetryBtn').addEventListener('click', startTopicSession);
 
-  checkBtn.addEventListener('click', function(){
-    if(checked) return;
-    checked = true;
-    const correct = checkWorksheetQuestion(currentQuestion);
-    lockWorksheetInputs();
-    recordTopicAttempt(currentTopicKey, currentQuestion.subtype, correct);
-    if(correct){
+  function finishQuestion(q){
+    const overallCorrect = q.partResults.length === q.parts.length && q.partResults.every(function(r){ return r; });
+    recordTopicAttempt(currentTopicKey, q.subtype, overallCorrect);
+    topicAttemptedCount++;
+    if(overallCorrect){
       topicCorrectCount++;
       sfxCorrect();
       flashTopicFeedback('correct');
     } else {
       sfxWrong();
       flashTopicFeedback('wrong');
-      const label = TOPICS[currentTopicKey].subtypeLabels[currentQuestion.subtype];
+      const label = TOPICS[currentTopicKey].subtypeLabels[q.subtype];
       topicMisses[label] = (topicMisses[label]||0) + 1;
     }
-    document.getElementById('topicScoreVal').textContent = topicCorrectCount;
-    checkBtn.style.display = 'none';
-    nextBtn.style.display = 'block';
+    topicScoreVal.textContent = topicCorrectCount;
+    topicAnswerInput.style.display = 'none';
+    topicKeypad.style.display = 'none';
+    topicChoiceBtns.style.display = 'none';
+
+    topicAwaitingAdvance = true;
+    if(overallCorrect){
+      topicAutoAdvanceTimer = setTimeout(function(){
+        topicAwaitingAdvance = false;
+        if(topicRunning) nextTopicQuestion();
+      }, 3000);
+    } else {
+      nextBtn.style.display = 'block';
+    }
+  }
+
+  function submitCurrentPart(rawValue){
+    if(!topicRunning || topicAwaitingAdvance) return;
+    const q = currentQuestion;
+    const part = q.parts[q.partIndex];
+    if(!part) return;
+    let ok;
+    if(part.kind === 'number'){
+      const val = parseInt(rawValue, 10);
+      ok = (val === part.expected);
+      part._entered = isNaN(val) ? '' : val;
+    } else {
+      ok = (rawValue === part.expected);
+      part._entered = rawValue;
+    }
+    q.partResults[q.partIndex] = ok;
+    q.partIndex++;
+    renderContext(q);
+
+    if(q.partIndex >= q.parts.length){
+      finishQuestion(q);
+    } else {
+      renderPartControls(q);
+      if(q.parts[q.partIndex].kind === 'number'){
+        setTimeout(function(){ topicAnswerInput.focus(); }, 30);
+      }
+    }
+  }
+
+  topicKeypad.addEventListener('click', function(e){
+    const btn = e.target.closest('.key');
+    if(!btn) return;
+    const k = btn.dataset.k;
+    if(k === 'enter'){
+      if(topicAnswerInput.value !== '') submitCurrentPart(topicAnswerInput.value);
+    }
+    else if(k === 'del'){ topicAnswerInput.value = topicAnswerInput.value.slice(0,-1); }
+    else { topicAnswerInput.value = (topicAnswerInput.value||'') + k; }
   });
-  nextBtn.addEventListener('click', nextTopicQuestion);
+  topicAnswerInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && topicAnswerInput.value !== ''){ submitCurrentPart(topicAnswerInput.value); }
+  });
+  topicChoiceBtns.addEventListener('click', function(e){
+    const btn = e.target.closest('.topic-choice-btn');
+    if(!btn) return;
+    submitCurrentPart(btn.dataset.val);
+  });
+  nextBtn.addEventListener('click', function(){
+    topicAwaitingAdvance = false;
+    nextBtn.style.display = 'none';
+    if(topicRunning) nextTopicQuestion();
+  });
 
   function endTopicSession(){
+    topicRunning = false;
+    clearInterval(topicTimerId);
+    clearTimeout(topicAutoAdvanceTimer);
+    topicAwaitingAdvance = false;
+    nextBtn.style.display = 'none';
+    topicAnswerInput.style.display = 'none';
+    topicKeypad.style.display = 'none';
+    topicChoiceBtns.style.display = 'none';
     sfxEnd();
-    const accuracy = topicTotalQuestions > 0 ? Math.round((topicCorrectCount/topicTotalQuestions)*100) : 0;
-    document.getElementById('topicStatCorrect').textContent = topicCorrectCount + ' / ' + topicTotalQuestions;
+
+    const accuracy = topicAttemptedCount > 0 ? Math.round((topicCorrectCount/topicAttemptedCount)*100) : 0;
+    document.getElementById('topicStatCorrect').textContent = topicCorrectCount + ' / ' + topicAttemptedCount;
     document.getElementById('topicStatAccuracy').textContent = accuracy + '%';
 
     let emoji='🙂', title='Gut gemacht!';
-    if(accuracy >= 90){ emoji='🏆'; title='Wahnsinn, super Ergebnis!'; }
+    if(accuracy >= 90 && topicAttemptedCount >= 5){ emoji='🏆'; title='Wahnsinn, super Ergebnis!'; }
     else if(accuracy >= 75){ emoji='🎉'; title='Klasse gemacht!'; }
     else if(accuracy >= 50){ emoji='💪'; title='Gut! Weiter so!'; }
     else { emoji='🌱'; title='Dran bleiben, du schaffst das!'; }
@@ -1624,7 +1686,7 @@
     const missEntries = Object.entries(topicMisses).sort(function(a,b){ return b[1]-a[1]; });
     if(missEntries.length){
       missListEl.style.display = 'block';
-      missItemsEl.innerHTML = missEntries.map(function([k,v]){ return k + ' (' + v + 'x falsch)'; }).join('<br>');
+      missItemsEl.innerHTML = missEntries.map(function(entry){ return entry[0] + ' (' + entry[1] + 'x falsch)'; }).join('<br>');
     } else {
       missListEl.style.display = 'none';
     }
