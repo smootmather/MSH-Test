@@ -57,13 +57,13 @@
     position:relative;
     z-index:1;
     width:100%;
-    max-width:480px;
+    max-width:clamp(320px, 92vw, 480px);
   }
 
   .card{
     background:var(--card);
     border-radius:28px;
-    padding:28px 24px 32px;
+    padding: clamp(18px, 5vw, 28px) clamp(14px, 4.5vw, 24px) clamp(20px, 5.5vw, 32px);
     box-shadow: var(--shadow), 0 20px 50px rgba(0,0,0,0.35);
     border:4px solid #ffffff55;
     position:relative;
@@ -74,7 +74,7 @@
     font-family:'Baloo 2', sans-serif;
     font-weight:800;
     text-align:center;
-    font-size:2.1rem;
+    font-size:clamp(1.5rem, 6vw, 2.1rem);
     margin:0 0 4px;
     background: linear-gradient(90deg, #7C3AED, #EC4899, #F59E0B);
     -webkit-background-clip:text;
@@ -243,7 +243,7 @@
   .problem{
     font-family:'Baloo 2', sans-serif;
     font-weight:800;
-    font-size:3rem;
+    font-size:clamp(1.9rem, 10vw, 3rem);
     color:#312E81;
     letter-spacing:1px;
   }
@@ -261,7 +261,7 @@
   .answer-input{
     width:100%;
     font-family:'Baloo 2', sans-serif;
-    font-size:2.2rem;
+    font-size:clamp(1.5rem, 7vw, 2.2rem);
     font-weight:800;
     text-align:center;
     padding:14px 10px;
@@ -633,10 +633,23 @@
     font-weight:600;
   }
 
-  @media (max-width:360px){
-    .title{ font-size:1.7rem; }
-    .problem{ font-size:2.4rem; }
-    .answer-input{ font-size:1.8rem; }
+  /* Very small phones: tighten spacing further (font sizes already scale via clamp()) */
+  @media (max-width:340px){
+    .card{ padding:16px 12px 20px; }
+    .keypad{ gap:6px; }
+    .key{ padding:11px 0; font-size:1.05rem; }
+    .mini-input-display{ width:44px; min-height:36px; font-size:0.95rem; }
+    .divisor-grid, .factor-row{ gap:6px; }
+  }
+
+  /* Tablets / desktop: let the card breathe a bit more instead of staying phone-sized */
+  @media (min-width:700px){
+    .app{ max-width:560px; }
+    .card{ padding:40px 44px 46px; }
+    .name-heading{ font-size:1.25rem; }
+    .coin-badge{ font-size:1.1rem; padding:9px 22px; }
+    .mini-input-display{ width:60px; min-height:46px; font-size:1.15rem; }
+    .prime-chip{ font-size:1.4rem; padding:18px 0; }
   }
 </style>
 </head>
@@ -1418,10 +1431,15 @@
   }
   function genTeilerhaus(){
     let n, divs, tries=0;
-    do{ n = randInt(8,90); divs = getDivisors(n); tries++; }
-    while((divs.length<4 || divs.length>8) && tries<50);
-    const parts = divs.map(function(d){ return { kind:'number', expected:d }; });
-    return { subtype:'teilerhaus', subtypeLabel:'Teilerhaus', context:{ n, divisors:divs }, parts, partIndex:0, partResults:[] };
+    do{ n = randInt(20,180); divs = getDivisors(n); tries++; }
+    while((divs.length<6 || divs.length>10) && tries<80);
+    // Any order is accepted, so parts don't carry a fixed expected value —
+    // correctness is checked against the shared "remaining" pool instead.
+    const parts = divs.map(function(){ return { kind:'number' }; });
+    return {
+      subtype:'teilerhaus', subtypeLabel:'Teilerhaus', context:{ n, divisors:divs },
+      parts, partIndex:0, partResults:[], orderIndependent:true, remaining: divs.slice()
+    };
   }
   const RULE_SENTENCES = [
     { template:'Wenn eine Zahl durch 10 teilbar ist, dann ist sie immer auch durch {0} und durch {1} teilbar.',
@@ -1447,8 +1465,8 @@
     let n, sequence, blankIndices;
     if(kind === 'teiler'){
       let divs, tries=0;
-      do{ n = randInt(12,90); divs = getDivisors(n); tries++; }
-      while((divs.length<4 || divs.length>8) && tries<50);
+      do{ n = randInt(20,180); divs = getDivisors(n); tries++; }
+      while((divs.length<6 || divs.length>10) && tries<80);
       sequence = divs;
       const blankCount = Math.min(3, Math.max(2, Math.floor(divs.length/2)), divs.length-1);
       blankIndices = [];
@@ -1511,8 +1529,12 @@
       factors = chosen.sort(function(a,b){ return a-b; });
       tries++;
     } while((factors.length < 2 || n < 4) && tries < 50);
-    const parts = factors.map(function(f){ return { kind:'number', expected:f }; });
-    return { subtype:'factorize', subtypeLabel:'Primfaktorzerlegung', context:{ n, factors }, parts, partIndex:0, partResults:[] };
+    // Any order is accepted here too (12 = 2×2×3 or 3×2×2, both fine).
+    const parts = factors.map(function(){ return { kind:'number' }; });
+    return {
+      subtype:'factorize', subtypeLabel:'Primfaktorzerlegung', context:{ n, factors },
+      parts, partIndex:0, partResults:[], orderIndependent:true, remaining: factors.slice()
+    };
   }
 
   const TOPICS = {
@@ -1809,6 +1831,12 @@
       flashTopicFeedback('wrong');
       const label = TOPICS[currentTopicKey].subtypeLabels[q.subtype];
       topicMisses[label] = (topicMisses[label]||0) + 1;
+      if(q.orderIndependent && q.remaining.length){
+        const info = document.createElement('div');
+        info.className = 'worksheet-hint';
+        info.textContent = 'Fehlt noch: ' + q.remaining.join(', ');
+        worksheetBox.appendChild(info);
+      }
     }
     topicScoreVal.textContent = topicCorrectCount;
     topicAnswerInput.style.display = 'none';
@@ -1834,7 +1862,13 @@
     let ok;
     if(part.kind === 'number'){
       const val = parseInt(rawValue, 10);
-      ok = (val === part.expected);
+      if(q.orderIndependent){
+        const idx = q.remaining.indexOf(val);
+        ok = idx !== -1;
+        if(ok) q.remaining.splice(idx, 1);
+      } else {
+        ok = (val === part.expected);
+      }
       part._entered = isNaN(val) ? '' : val;
     } else {
       ok = (rawValue === part.expected);
