@@ -1,0 +1,9 @@
+[
+ {"id":"atlantik","name":"Atlantik","nom":"der Atlantik","alias":["Atlantischer Ozean"],"info":"Ozean im Westen Europas","laender":[],"punkt":[-17,47]},
+ {"id":"nordmeer","name":"Europäisches Nordmeer","nom":"das Europäische Nordmeer","alias":["Nordmeer"],"info":"zwischen Island, Norwegen und Grönland","laender":["island","norwegen","groenland"],"punkt":[0,69]},
+ {"id":"nordsee","name":"Nordsee","nom":"die Nordsee","laender":["uk","norwegen","daenemark","deutschland","niederlande","belgien","frankreich"],"punkt":[3.5,56]},
+ {"id":"ostsee","name":"Ostsee","nom":"die Ostsee","laender":["deutschland","daenemark","schweden","finnland","russland","estland","lettland","litauen","polen"],"punkt":[19.3,57.8]},
+ {"id":"mittelmeer","name":"Mittelmeer","nom":"das Mittelmeer","info":"zwischen Europa und Afrika","laender":[],"punkt":[18,35.3]},
+ {"id":"schwarzesmeer","name":"Schwarzes Meer","nom":"das Schwarze Meer","laender":["bulgarien","rumaenien","ukraine","russland","georgien","tuerkei"],"punkt":[34,43.2]},
+ {"id":"kaspischesmeer","name":"Kaspisches Meer","nom":"das Kaspische Meer","alias":["Kaspisee"],"laender":["russland","kasachstan","turkmenistan","iran","aserbaidschan"],"punkt":[50.6,42.3]}
+]

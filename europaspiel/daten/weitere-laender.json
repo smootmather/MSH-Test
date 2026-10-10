@@ -1,0 +1,9 @@
+[
+ {"id":"georgien","name":"Georgien"},
+ {"id":"armenien","name":"Armenien"},
+ {"id":"aserbaidschan","name":"Aserbaidschan"},
+ {"id":"kasachstan","name":"Kasachstan"},
+ {"id":"turkmenistan","name":"Turkmenistan"},
+ {"id":"iran","name":"Iran","akk":"den Iran","dat":"dem Iran"},
+ {"id":"groenland","name":"Grönland"}
+]

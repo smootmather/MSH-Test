@@ -1,0 +1,1205 @@
+<title>Europaspiel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: eine Spalte wie ein Schulheft, Karte als großes Arbeitsblatt, Kategorien als farbige Reiter */
+:root{
+  --bg:#EDF2F5; --surface:#FFFFFF; --surface2:#F5F8FA; --ink:#14222E; --muted:#56687A; --line:#D3DDE5;
+  --land:#DD6B20; --meer:#2160C4; --geb:#8A5A36; --fluss:#0C8F9C; --mix:#3B4A5A;
+  --ok:#23894A; --ok-bg:#E2F4E8; --bad:#C8333C; --bad-bg:#FBE5E6; --gold:#D99A0B;
+  --sea:#CFE3F1; --landfill:#F4EFE2; --landhi:#FBE3C9; --other:#E1E5E8; --border:#9AA7B1;
+  --k:var(--mix);
+  --f-display:"Fredoka","Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Lexend","Segoe UI",system-ui,-apple-system,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1720; --surface:#16222D; --surface2:#1C2A36; --ink:#E6EDF2; --muted:#9BAAB7; --line:#2A3A47;
+  --land:#F0874A; --meer:#6797EC; --geb:#C0906A; --fluss:#3CC2CE; --mix:#A9B8C6;
+  --ok:#4CC27A; --ok-bg:#163525; --bad:#F06A72; --bad-bg:#3B1C20; --gold:#F2B83A;
+  --sea:#17324A; --landfill:#2C3B46; --landhi:#4A3A2C; --other:#1E2A33; --border:#56697A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --surface:#16222D; --surface2:#1C2A36; --ink:#E6EDF2; --muted:#9BAAB7; --line:#2A3A47;
+  --land:#F0874A; --meer:#6797EC; --geb:#C0906A; --fluss:#3CC2CE; --mix:#A9B8C6;
+  --ok:#4CC27A; --ok-bg:#163525; --bad:#F06A72; --bad-bg:#3B1C20; --gold:#F2B83A;
+  --sea:#17324A; --landfill:#2C3B46; --landhi:#4A3A2C; --other:#1E2A33; --border:#56697A; color-scheme:dark}
+[data-kat="laender"]{--k:var(--land)} [data-kat="meere"]{--k:var(--meer)} [data-kat="gebirge"]{--k:var(--geb)} [data-kat="fluesse"]{--k:var(--fluss)} [data-kat="mix"]{--k:var(--mix)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--k);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.15;text-wrap:balance;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px}
+.logo{font-family:var(--f-display);font-weight:700;font-size:1.45rem;letter-spacing:.01em;display:flex;align-items:center;gap:8px;background:none;border:0;padding:0}
+.logo svg{width:28px;height:28px}
+.pill{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:600;font-variant-numeric:tabular-nums}
+.pill .st{color:var(--gold)}
+main{padding-block:16px 110px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding-block:6px}
+nav.tabs button{background:none;border:0;border-radius:12px;padding:8px 4px;font-size:.85rem;font-weight:500;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.on{color:var(--ink);background:var(--surface2)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 20px;border-radius:12px;border:2px solid transparent;font-weight:600;font-size:1.02rem;background:var(--k);color:#fff;text-align:center}
+.btn.sec{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.ghost{background:none;color:var(--muted);border-color:transparent;min-height:44px;padding:8px 12px}
+.btn.wide{width:100%}
+.btn.danger{background:var(--bad)}
+.btn:disabled{opacity:.45;cursor:default}
+.back{background:none;border:0;color:var(--muted);font-weight:500;padding:6px 0;display:inline-flex;align-items:center;gap:4px;min-height:40px}
+/* Startseite */
+.daily{border:2px solid var(--gold);background:var(--surface)}
+.daily h2{font-size:1.35rem}
+.sect h2{font-size:1.1rem;margin-bottom:10px}
+.modes{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:520px){.modes{grid-template-columns:1fr 1fr}}
+.mode{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-height:84px}
+.mode:hover{border-color:var(--border)}
+.mode b{font-family:var(--f-display);font-weight:600;font-size:1.12rem}
+.mode span{color:var(--muted);font-size:.9rem}
+.dots{display:flex;gap:5px;margin-top:4px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--k)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+/* Kategorie-Chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 16px;font-weight:600;min-height:46px;display:inline-flex;align-items:center;gap:8px}
+.chip .dot{background:var(--k)}
+.chip.on{border-color:var(--k);background:color-mix(in srgb,var(--k) 14%,var(--surface))}
+/* Spielfläche */
+.gamehead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.gamehead h1{font-size:1.4rem}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--k) 15%,var(--surface));color:var(--ink)}
+.tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--k)}
+.prog{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--k);border-radius:99px;transition:width .3s}
+.qcard{background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--k);border-radius:var(--r);padding:20px 18px;display:flex;flex-direction:column;gap:6px}
+.qcard .q{font-family:var(--f-display);font-weight:600;font-size:clamp(1.5rem,6vw,2.1rem);line-height:1.15;text-wrap:balance;overflow-wrap:anywhere}
+.qcard .q.long{font-size:clamp(1.15rem,4.4vw,1.45rem)}
+.qcard .h{color:var(--muted)}
+.opts{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:520px){.opts{grid-template-columns:1fr 1fr}}
+.opt{min-height:58px;padding:12px 16px;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-weight:600;font-size:1.05rem;text-align:left;overflow-wrap:anywhere}
+.opt:hover:not(:disabled){border-color:var(--k)}
+.opt:disabled{cursor:default}
+.opt.ok,.ok-box{border-color:var(--ok);background:var(--ok-bg)}
+.opt.bad,.bad-box{border-color:var(--bad);background:var(--bad-bg)}
+.opt.sel{border-color:var(--k);background:color-mix(in srgb,var(--k) 14%,var(--surface))}
+.opt.miss{border-style:dashed;border-color:var(--ok)}
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tf .opt{text-align:center;font-size:1.2rem;min-height:72px}
+.fb{border-radius:12px;padding:14px 16px;border:2px solid;display:flex;flex-direction:column;gap:4px}
+.fb b{font-family:var(--f-display);font-size:1.2rem;font-weight:600}
+.fb.ok{border-color:var(--ok);background:var(--ok-bg)}
+.fb.bad{border-color:var(--bad);background:var(--bad-bg)}
+.fb .t-ok{color:var(--ok)} .fb .t-bad{color:var(--bad)}
+.inp{width:100%;min-height:56px;font:inherit;font-size:1.2rem;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.inp:focus{outline:none;border-color:var(--k)}
+.timer{font-family:var(--f-display);font-weight:600;font-size:1.3rem;font-variant-numeric:tabular-nums;margin-left:auto}
+.timer.low{color:var(--bad)}
+.big{font-family:var(--f-display);font-weight:700;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
+.stars{font-size:2.2rem;letter-spacing:.1em;color:var(--gold)}
+.stars .off{color:var(--line)}
+/* Karteikarten */
+.flip{perspective:1200px;min-height:230px;cursor:pointer;background:none;border:0;padding:0;width:100%;text-align:center}
+.flip .in{position:relative;min-height:230px;transition:transform .45s;transform-style:preserve-3d}
+.flip.turned .in{transform:rotateY(180deg)}
+.flip .side{position:absolute;inset:0;overflow:auto;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--k);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px}
+.flip .back-s{transform:rotateY(180deg)}
+.flip .w{font-family:var(--f-display);font-weight:600;font-size:clamp(1.6rem,7vw,2.3rem);line-height:1.15;text-wrap:balance}
+.flip .x{color:var(--muted);max-width:40ch}
+/* Karte */
+.mapbox{position:relative;background:var(--sea);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.mapbox svg{display:block;width:100%;height:auto;max-height:64vh}
+.mapctl{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
+.mapctl button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:1.3rem;font-weight:600;line-height:1}
+.m-land{fill:var(--landfill);stroke:var(--border);stroke-width:.6;vector-effect:non-scaling-stroke}
+.m-other{fill:var(--other);stroke:var(--border);stroke-width:.4;vector-effect:non-scaling-stroke;opacity:.85}
+.clickL .m-land{cursor:pointer}
+.clickL .m-land:hover{fill:var(--landhi)}
+.m-land.ok,.m-micro.ok{fill:var(--ok)} .m-land.bad,.m-micro.bad{fill:var(--bad)}
+.m-land.soft{fill:color-mix(in srgb,var(--ok) 35%,var(--landfill))}
+.m-micro{fill:var(--landfill);stroke:var(--ink);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.m-geb{fill:none;stroke:var(--geb);stroke-width:9;stroke-linecap:round;stroke-linejoin:round;opacity:.8;vector-effect:non-scaling-stroke}
+.m-geb2{fill:none;stroke:var(--surface);stroke-width:2;stroke-dasharray:2 7;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.7}
+.m-fluss{fill:none;stroke:var(--fluss);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.m-hit{fill:none;stroke:transparent;stroke-width:22;stroke-linecap:round;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer}
+.m-hitc{fill:transparent;cursor:pointer}
+.noLines .m-hit{pointer-events:none}
+.m-geb.ok,.m-fluss.ok{stroke:var(--ok);opacity:1} .m-geb.bad,.m-fluss.bad{stroke:var(--bad);opacity:1}
+.m-geb.hl,.m-fluss.hl{stroke-width:12}
+.m-ring{fill:none;stroke-width:3;vector-effect:non-scaling-stroke}
+.m-ring.ok{stroke:var(--ok)} .m-ring.bad{stroke:var(--bad)}
+.m-lbl{font-family:var(--f-body);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none}
+.m-lbl.ok{fill:var(--ok)} .m-lbl.bad{fill:var(--bad)}
+.m-mk circle{fill:var(--k);stroke:var(--surface);vector-effect:non-scaling-stroke;stroke-width:2;cursor:pointer}
+.m-mk text{fill:#fff;font-family:var(--f-body);font-weight:600;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.m-mk.act circle{fill:var(--ink)} .m-mk.act text{fill:var(--surface)}
+.m-mk.ok circle{fill:var(--ok)} .m-mk.bad circle{fill:var(--bad)}
+.m-seaname{font-family:var(--f-body);font-style:italic;fill:var(--meer);font-weight:500;pointer-events:none;text-anchor:middle}
+/* Stumme Karte */
+.slots{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:520px){.slots{grid-template-columns:1fr 1fr}}
+.slot{display:flex;align-items:center;gap:10px;min-height:48px;border:2px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--surface);text-align:left}
+.slot .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--k);color:#fff;display:grid;place-items:center;font-weight:600;font-size:.9rem}
+.slot.act{border-color:var(--ink)}
+.slot .v{min-width:0;overflow-wrap:anywhere}
+.slot .v.e{color:var(--muted)}
+/* Drag & Drop */
+.bank{display:flex;flex-wrap:wrap;gap:8px;min-height:64px;padding:10px;border:2px dashed var(--line);border-radius:var(--r);background:var(--surface2)}
+.dchip{touch-action:none;user-select:none;-webkit-user-select:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 14px;border-radius:999px;background:var(--surface);border:2px solid var(--k);font-weight:600;cursor:grab}
+.dchip.sel{background:var(--k);color:#fff}
+.dchip.ok{border-color:var(--ok);background:var(--ok-bg)} .dchip.bad{border-color:var(--bad);background:var(--bad-bg)}
+.dchip.ghost{position:fixed;z-index:100;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translate(-50%,-50%) scale(1.05)}
+.dchip.miss{border-style:dashed;border-color:var(--ok);background:none;color:var(--ok)}
+.zones{display:grid;grid-template-columns:1fr;gap:10px}
+.zones.two{grid-template-columns:1fr 1fr}
+.zones.two .zone{min-height:76px;padding:8px 10px}
+@media (min-width:520px){.zones{grid-template-columns:1fr 1fr}}
+.zone{border:2px solid var(--line);border-radius:var(--r);background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:84px}
+.zone.over{border-color:var(--k);background:color-mix(in srgb,var(--k) 10%,var(--surface))}
+.zone .zn{font-family:var(--f-display);font-weight:600;font-size:1.1rem}
+.zone .zc{display:flex;flex-wrap:wrap;gap:6px;min-height:44px}
+.zone.ok{border-color:var(--ok);background:var(--ok-bg)} .zone.bad{border-color:var(--bad);background:var(--bad-bg)}
+/* Statistik */
+.kbar{display:grid;grid-template-columns:7.5em 1fr 3.2em;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
+.kbar .tr{height:14px;border-radius:7px;background:var(--line);overflow:hidden}
+.kbar .tr i{display:block;height:100%;background:var(--k);border-radius:7px}
+.kbar .p{text-align:right;font-weight:600}
+.weak{display:flex;flex-direction:column}
+.weak li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.weak li:last-child{border-bottom:0}
+.weak .nm{min-width:0;flex:1;overflow-wrap:anywhere}
+.weak .ct{color:var(--muted);font-size:.875rem;white-space:nowrap}
+ol.weak,ul.plain{list-style:none;margin:0;padding:0}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:300px;height:auto}
+.chart text{fill:var(--muted);font-family:var(--f-body);font-size:11px}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .bar{fill:var(--meer)}
+.chart .bar:hover{fill:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.kpi b{display:block;font-family:var(--f-display);font-size:1.6rem;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.8rem;color:var(--muted)}
+/* Abzeichen */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.badge{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.badge .medal{width:46px;height:46px}
+.badge b{font-family:var(--f-display);font-weight:600;font-size:1.02rem}
+.badge span{font-size:.85rem;color:var(--muted)}
+.badge.locked{opacity:.55}
+.badge.locked .medal{filter:grayscale(1)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.confirm{border:2px solid var(--bad);background:var(--bad-bg)}
+.review li{padding:10px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.flash-ok{animation:fo .35s}
+.flash-bad{animation:fb .35s}
+@keyframes fo{0%{background:var(--ok-bg)}100%{background:var(--surface)}}
+@keyframes fb{0%{background:var(--bad-bg)}100%{background:var(--surface)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="top"><div class="wrap">
+  <button class="logo" id="logo" aria-label="Zur Startseite">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--meer)"/><g fill="var(--gold)"><circle cx="16" cy="6.5" r="1.6"/><circle cx="25.5" cy="16" r="1.6"/><circle cx="16" cy="25.5" r="1.6"/><circle cx="6.5" cy="16" r="1.6"/><circle cx="22.7" cy="9.3" r="1.6"/><circle cx="22.7" cy="22.7" r="1.6"/><circle cx="9.3" cy="22.7" r="1.6"/><circle cx="9.3" cy="9.3" r="1.6"/></g></svg>
+    Europaspiel</button>
+  <div class="pill" title="Deine Punkte"><span class="st">★</span><span id="punkte">0</span></div>
+</div></header>
+<main><div class="wrap" id="app"></div></main>
+<nav class="tabs" aria-label="Hauptnavigation"><div class="wrap">
+  <button data-tab="start" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Spielen</button>
+  <button data-tab="statistik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Statistik</button>
+  <button data-tab="abzeichen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14l-2 7 5.5-3 5.5 3-2-7"/></svg>Abzeichen</button>
+</div></nav>
+
+<!--DATEN-->
+
+<script>
+"use strict";
+/* ================= Daten ================= */
+const RAW = JSON.parse(document.getElementById('daten').textContent);
+const KARTE = RAW.karte;
+const KATS = {
+  laender:{name:'Länder', items:RAW.laender, frage:'Welches Land ist gemeint?'},
+  meere:{name:'Meere', items:RAW.meere, frage:'Welches Meer ist gemeint?'},
+  gebirge:{name:'Gebirge', items:RAW.gebirge, frage:'Welches Gebirge ist gemeint?'},
+  fluesse:{name:'Flüsse', items:RAW.fluesse, frage:'Welcher Fluss ist gemeint?'}
+};
+const KAT_IDS = Object.keys(KATS);
+const L = RAW.laender;
+const LAND = {}; [...RAW.laender, ...RAW.weitere].forEach(x => LAND[x.id] = x);
+const ITEM = {};
+for (const k of KAT_IDS) for (const it of KATS[k].items) ITEM[k + ':' + it.id] = {kat:k, it};
+const cardsOf = k => KATS[k].items.map(it => k + ':' + it.id);
+const ALL_CARDS = Object.keys(ITEM);
+
+/* ================= Helfer ================= */
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let rnd = Math.random;
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const pick = a => a[Math.floor(rnd() * a.length)];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const sample = (a, n) => shuffle(a).slice(0, n);
+const uniq = a => [...new Set(a)];
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const heute = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const lname = id => LAND[id] ? LAND[id].name : id;
+const akk = id => LAND[id].akk || LAND[id].name;
+const dat = id => LAND[id].dat || LAND[id].name;
+const inDat = id => { const d = dat(id); return d.startsWith('dem ') ? 'im ' + d.slice(4) : 'in ' + d; };
+const gen = id => LAND[id].gen || 'von ' + LAND[id].name;
+const liste = a => a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' und ' + a[a.length - 1];
+const fmt = n => n.toLocaleString('de-DE');
+function lp(kat, it){
+  if (kat === 'laender') return it.lp;
+  if (kat === 'meere') return it.punkt;
+  return it.linie[Math.floor(it.linie.length / 2)];
+}
+function dist(a, b){ const dx = (a[0]-b[0]) * Math.cos((a[1]+b[1]) / 2 * Math.PI / 180); const dy = a[1]-b[1]; return Math.sqrt(dx*dx + dy*dy); }
+/* Länder in der Nähe einer Gruppe – für plausible Falschantworten */
+function nahe(ids, n, ohne = [], ohneKlein = false){
+  const pts = ids.map(id => LAND[id] && LAND[id].lp).filter(Boolean);
+  const cand = L.filter(l => !ids.includes(l.id) && !ohne.includes(l.id) && !(ohneKlein && l.klein))
+    .map(l => ({l, d: pts.length ? Math.min(...pts.map(p => dist(p, l.lp))) : rnd()}))
+    .sort((a, b) => a.d - b.d).slice(0, Math.max(n * 2, n + 3));
+  return sample(cand, n).map(x => x.l.id);
+}
+function kartenName(card){
+  const {kat, it} = ITEM[card];
+  return kat === 'laender' ? it.name + ' – ' + it.hauptstadt : it.name;
+}
+
+/* ================= Speicher ================= */
+const KEY = 'europaspiel.v1';
+function leer(){ return {cards:{}, hist:{}, punkte:0, abz:{}, best:{rennen:0, serie:0, pruefung:null}, daily:{}, runden:0, perfekt:0, kartenRichtig:0}; }
+let S = leer();
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.cards) S = Object.assign(leer(), s); } catch (e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} updPunkte(); }
+function updPunkte(){ document.getElementById('punkte').textContent = fmt(S.punkte); }
+function record(card, ok){
+  if (!ITEM[card]) return;
+  const c = S.cards[card] || (S.cards[card] = {r:0, f:0, l:0, s:0});
+  if (ok) { c.r++; c.s++; } else { c.f++; c.s = 0; }
+  c.l = Date.now();
+  const h = S.hist[heute()] || (S.hist[heute()] = {r:0, f:0});
+  ok ? h.r++ : h.f++;
+  save();
+}
+
+/* ================= Adaptives Fragen ================= */
+function gewicht(card){
+  const c = S.cards[card];
+  if (!c) return 2;
+  const n = c.r + c.f;
+  let w = 1 + 5 * (c.f / n);
+  if (c.s === 0 && c.f > 0) w *= 2;
+  if (c.s >= 3) w *= 0.25;
+  if (c.s >= 6) w *= 0.5;
+  if (Date.now() - c.l < 20000) w *= 0.2;
+  return w;
+}
+function wPick(cards, n){
+  const out = []; let pool = cards.slice();
+  while (out.length < n && cards.length) {
+    if (!pool.length) pool = cards.filter(c => c !== out[out.length - 1]);
+    const ws = pool.map(gewicht); const sum = ws.reduce((a, b) => a + b, 0);
+    let r = rnd() * sum, i = 0;
+    while (i < ws.length - 1 && (r -= ws[i]) > 0) i++;
+    out.push(pool[i]); pool.splice(i, 1);
+  }
+  return out;
+}
+function schwachScore(card){
+  const c = S.cards[card]; if (!c || !c.f) return 0;
+  let s = (c.f + 1) / (c.r + c.f + 2) + c.f * 0.05;
+  if (c.s >= 3) s *= 0.3; else if (c.s === 0) s *= 1.3;
+  return s;
+}
+function schwaechen(n = 10){
+  return ALL_CARDS.filter(c => schwachScore(c) > 0.25).sort((a, b) => schwachScore(b) - schwachScore(a)).slice(0, n);
+}
+
+/* ================= Fragen bauen ================= */
+function beschreibung(kat, it){
+  if (kat === 'meere') return it.info ? cap(it.info) : 'Grenzt an: ' + it.laender.map(lname).join(', ');
+  if (kat === 'gebirge') return 'Liegt in: ' + it.laender.map(lname).join(', ');
+  return 'Fließt durch: ' + it.laender.map(lname).join(', ');
+}
+function erkl(kat, it){
+  if (kat === 'laender') return `${it.hauptstadt} ist die Hauptstadt ${gen(it.id)}.`;
+  if (kat === 'meere') return it.laender.length ? `${cap(it.nom)} grenzt an ${liste(it.laender.map(akk))}.` : `${cap(it.nom)} – ${it.info}.`;
+  if (kat === 'gebirge') return `${cap(it.nom)} ${it.plural ? 'liegen' : 'liegt'} ${liste(it.laender.map(inDat))}.`;
+  return `${cap(it.nom)} fließt durch ${liste(it.laender.map(akk))}.`;
+}
+const sameList = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+function eindeutig(kat, it){ return !KATS[kat].items.some(o => o !== it && sameList(o.laender, it.laender)); }
+function akzeptiert(kat, it){ return [it.name, ...(it.alias || [])]; }
+
+function frage(card, art, opt = {}){
+  const {kat, it} = ITEM[card];
+  const q = {card, kat, art, erkl: erkl(kat, it)};
+  if (kat === 'laender') {
+    const dir = opt.dir || (rnd() < .5 ? 'lh' : 'hl');
+    const nb = nahe([it.id], 8);
+    if (dir === 'lh') {
+      q.frage = it.name; q.hinweis = 'Wie heißt die Hauptstadt?';
+      q.antwort = it.hauptstadt; q.akzept = [it.hauptstadt, ...(it.aliasHs || [])];
+      q.pool = nb.map(id => LAND[id].hauptstadt).filter(h => h !== it.hauptstadt);
+    } else {
+      q.frage = it.hauptstadt; q.hinweis = 'Von welchem Land ist das die Hauptstadt?';
+      q.antwort = it.name; q.akzept = [it.name, ...(it.alias || [])];
+      q.pool = nb.map(lname);
+    }
+  } else {
+    const rev = art === 'mc' && it.laender.length && !opt.nurName && rnd() < 0.3;
+    if (rev) {
+      const land = pick(it.laender.filter(id => L.some(l => l.id === id)).length ? it.laender.filter(id => L.some(l => l.id === id)) : it.laender);
+      q.frage = it.name;
+      q.hinweis = kat === 'fluesse' ? `Durch welches Land fließt ${it.nom}?` : kat === 'gebirge' ? `In welchem Land ${it.plural ? 'liegen' : 'liegt'} ${it.nom}?` : `An welches Land grenzt ${it.nom}?`;
+      q.antwort = lname(land); q.akzept = [q.antwort];
+      q.pool = nahe(it.laender, 6, it.laender, true).map(lname);
+    } else {
+      q.frage = beschreibung(kat, it); q.lang = true;
+      q.hinweis = KATS[kat].frage;
+      if (art === 'tip' && !eindeutig(kat, it)) q.hinweis += ` Tipp: Er beginnt mit „${it.name[0]}“.`;
+      q.antwort = it.name; q.akzept = akzeptiert(kat, it);
+      q.pool = KATS[kat].items.filter(o => o !== it && !sameList(o.laender, it.laender)).map(o => o.name);
+    }
+  }
+  if (art === 'mc') q.optionen = shuffle([q.antwort, ...sample(uniq(q.pool.filter(x => x !== q.antwort)), 3)]);
+  return q;
+}
+/* Wahr-oder-falsch-Aussage */
+function wfFrage(card){
+  const {kat, it} = ITEM[card];
+  let wahr = rnd() < .5, satz;
+  if (kat === 'laender') {
+    const hs = wahr ? it.hauptstadt : LAND[pick(nahe([it.id], 4))].hauptstadt;
+    satz = `${hs} ist die Hauptstadt ${gen(it.id)}.`;
+  } else if (!it.laender.length) {
+    // Meere ohne Länderliste: Aussage über die Lage
+    const other = pick(KATS.meere.items.filter(m => m !== it));
+    const txt = wahr ? it.info : (other.info || 'zwischen ' + liste(other.laender.slice(0,3).map(lname)));
+    satz = `${cap(it.nom)} – ${txt}.`;
+  } else {
+    const land = wahr ? pick(it.laender) : pick(nahe(it.laender, 4, it.laender, true));
+    if (kat === 'fluesse') satz = `${cap(it.nom)} fließt durch ${akk(land)}.`;
+    else if (kat === 'gebirge') satz = `${cap(it.nom)} ${it.plural ? 'liegen' : 'liegt'} ${inDat(land)}.`;
+    else satz = `${cap(it.nom)} grenzt an ${akk(land)}.`;
+  }
+  return {card, kat, art:'tf', frage:satz, antwort:wahr, erkl:erkl(kat, it)};
+}
+
+/* ================= Eintippen: Toleranz ================= */
+function norm(s){ return s.toLowerCase().replace(/ß/g, 'ss').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, ''); }
+function lev(a, b){
+  const m = a.length, n = b.length; let prev = Array.from({length:n + 1}, (_, j) => j);
+  for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1)); prev = cur; }
+  return prev[n];
+}
+function pruefeTipp(eingabe, akzept){
+  const e = norm(eingabe);
+  if (!e) return {ok:false};
+  if (e === 'ural' && akzept.some(a => /ural/i.test(a))) return {ok:false, msg:'Bitte genau: „Fluss Ural“ oder „Uralgebirge“ – nie nur „Ural“.'};
+  for (const a of akzept) {
+    const n = norm(a);
+    if (n === e) return {ok:true, exakt:true};
+    const tol = n.length <= 4 ? 0 : n.length <= 8 ? 1 : 2;
+    if (lev(e, n) <= tol) return {ok:true, exakt:false};
+  }
+  return {ok:false};
+}
+
+/* ================= Punkte, Sterne, Abzeichen ================= */
+const sterne = p => p >= .9 ? 3 : p >= .7 ? 2 : p >= .5 ? 1 : 0;
+const sternHtml = n => '<span aria-label="' + n + ' von 3 Sternen">' + [0,1,2].map(i => i < n ? '★' : '<span class="off">★</span>').join('') + '</span>';
+const alleGemeistert = k => cardsOf(k).every(c => S.cards[c] && S.cards[c].s >= 3);
+const ABZ = [
+  {id:'start', name:'Losgelegt', text:'Erste Runde beendet', ok:() => S.runden >= 1},
+  {id:'perfekt', name:'Fehlerfrei', text:'Eine Runde ohne Fehler', ok:() => S.perfekt >= 1},
+  {id:'meere', name:'Alle Meere gemeistert', text:'Jedes Meer 3× in Folge richtig', ok:() => alleGemeistert('meere')},
+  {id:'gebirge', name:'Gipfelstürmer', text:'Jedes Gebirge 3× in Folge richtig', ok:() => alleGemeistert('gebirge')},
+  {id:'fluesse', name:'Flusskapitän', text:'Jeder Fluss 3× in Folge richtig', ok:() => alleGemeistert('fluesse')},
+  {id:'laender', name:'Hauptstadt-Profi', text:'Alle 47 Länder 3× in Folge richtig', ok:() => alleGemeistert('laender')},
+  {id:'rennen', name:'Blitzschnell', text:'15 Hauptstädte im Zeitrennen', ok:() => S.best.rennen >= 15},
+  {id:'serie', name:'Serienheld', text:'20 richtige Antworten in Folge', ok:() => S.best.serie >= 20},
+  {id:'note1', name:'Einserkandidat', text:'Note 1 im Prüfungsmodus', ok:() => S.best.pruefung === 1},
+  {id:'karte', name:'Kartenleser', text:'50 richtige Antworten auf der Karte', ok:() => S.kartenRichtig >= 50},
+  {id:'tage', name:'Dranbleiber', text:'Tägliche Challenge an 3 Tagen', ok:() => Object.keys(S.daily).length >= 3},
+  {id:'fleiss', name:'Fleißig', text:'500 Antworten insgesamt', ok:() => Object.values(S.cards).reduce((a, c) => a + c.r + c.f, 0) >= 500}
+];
+function pruefeAbz(){
+  const neu = [];
+  for (const a of ABZ) if (!S.abz[a.id] && a.ok()) { S.abz[a.id] = heute(); neu.push(a); }
+  if (neu.length) save();
+  return neu;
+}
+const medalCols = ['--land','--meer','--geb','--fluss'];
+function medal(i, locked){
+  const c = 'var(' + medalCols[i % 4] + ')';
+  return `<svg class="medal" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 4h8l-3 14h-8zM33 4h-8l3 14h8z" fill="${c}" opacity=".55"/><circle cx="24" cy="30" r="14" fill="${c}"/><circle cx="24" cy="30" r="10" fill="none" stroke="var(--surface)" stroke-width="2"/><path d="M24 23.5l2 4.2 4.6.6-3.3 3.2.8 4.6-4.1-2.2-4.1 2.2.8-4.6-3.3-3.2 4.6-.6z" fill="var(--surface)"/></svg>`;
+}
+let toastT;
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
+  document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 3200);
+}
+
+/* ================= Karte ================= */
+const PS = KARTE.s, PT = KARTE.t;
+function P(lon, lat){
+  const r = Math.PI / 180, l0 = 15 * r, p1 = 52 * r, l = lon * r, p = lat * r;
+  const k = Math.sqrt(2 / (1 + Math.sin(p1) * Math.sin(p) + Math.cos(p1) * Math.cos(p) * Math.cos(l - l0)));
+  return [PT[0] + PS * k * Math.cos(p) * Math.sin(l - l0), PT[1] - PS * k * (Math.cos(p1) * Math.sin(p) - Math.sin(p1) * Math.cos(p) * Math.cos(l - l0))];
+}
+const linePath = pts => 'M' + pts.map(p => P(p[0], p[1]).map(v => v.toFixed(1)).join(',')).join('L');
+const QL = new Set(L.map(l => l.id));
+/*
+ opt: {laender:bool (klickbar), gebirge:[ids]|true, fluesse:[ids]|true, meerNamen:bool, onPick(info)}
+ info: {kind:'laender'|'gebirge'|'fluesse'|'meere', id, x, y}
+*/
+function karte(host, opt = {}){
+  const W = KARTE.w, H = KARTE.h;
+  const sel = (v, items) => v === true ? items : (v || []).map(id => items.find(i => i.id === id));
+  const geb = sel(opt.gebirge, RAW.gebirge), fl = sel(opt.fluesse, RAW.fluesse);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Karte von Europa" class="${opt.laender ? 'clickL' : ''}"><rect width="${W}" height="${H}" fill="var(--sea)"/><g>`;
+  for (const c of KARTE.countries) {
+    if (c.k === 'x') s += `<path class="m-other" d="${c.d}"/>`;
+    else s += `<path class="m-land" data-k="${c.k}" d="${c.d}"/>`;
+  }
+  s += '</g>';
+  if (opt.meerNamen) for (const m of RAW.meere) { const p = P(...m.punkt); s += `<text class="m-seaname" data-s="11" x="${p[0]}" y="${p[1]}">${esc(m.name)}</text>`; }
+  for (const g of geb) { const d = linePath(g.linie); s += `<g data-kind="gebirge" data-id="${g.id}"><path class="m-geb" d="${d}"/><path class="m-geb2" d="${d}"/><path class="m-hit" d="${d}"/></g>`; }
+  for (const f of fl) { const d = linePath(f.linie); s += `<g data-kind="fluesse" data-id="${f.id}"><path class="m-fluss" d="${d}"/><path class="m-hit" d="${d}"/></g>`; }
+  s += '<g class="mikro">';
+  for (const m of KARTE.micro) s += `<circle class="m-micro" data-k="${m.k}" data-s="4" cx="${m.x}" cy="${m.y}" r="4"/>${opt.laender ? `<circle class="m-hitc" data-k="${m.k}" data-s="12" cx="${m.x}" cy="${m.y}" r="11"/>` : ''}`;
+  s += '</g><g class="over"></g></svg>';
+  host.innerHTML = `<div class="mapbox">${s}<div class="mapctl"><button type="button" data-z="in" aria-label="Hineinzoomen">+</button><button type="button" data-z="out" aria-label="Herauszoomen">−</button><button type="button" data-z="reset" aria-label="Ganze Karte">⤢</button></div></div>`;
+  const box = host.firstChild, svg = box.querySelector('svg'), over = svg.querySelector('.over');
+  const ratio = H / W;
+  const startVB = opt.kern ? {x:150, y:190, w:700, h:700 * ratio} : {x:0, y:0, w:W, h:H};
+  let vb = {...startVB};
+  function apply(){
+    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    const upp = vb.w / (svg.getBoundingClientRect().width || 360); // SVG-Einheiten pro Bildschirmpixel
+    svg.querySelectorAll('[data-s]').forEach(el => {
+      const b = +el.dataset.s * upp;
+      if (el.tagName === 'text') el.setAttribute('font-size', b); else el.setAttribute('r', b);
+    });
+  }
+  function clampVB(){
+    vb.w = Math.min(W, Math.max(W / 10, vb.w)); vb.h = vb.w * ratio;
+    vb.x = Math.min(W - vb.w, Math.max(0, vb.x)); vb.y = Math.min(H - vb.h, Math.max(0, vb.y));
+  }
+  function toSvg(cx, cy){ const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+  function zoom(f, px, py){
+    if (px == null) { px = vb.x + vb.w / 2; py = vb.y + vb.h / 2; }
+    const nw = Math.min(W, Math.max(W / 10, vb.w / f)), k = nw / vb.w;
+    vb.x = px - (px - vb.x) * k; vb.y = py - (py - vb.y) * k; vb.w = nw; clampVB(); apply();
+  }
+  function zoomTo(x, y, w){ vb.w = w; vb.h = w * ratio; vb.x = x - w / 2; vb.y = y - vb.h / 2; clampVB(); apply(); }
+  box.querySelector('.mapctl').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.z === 'in') zoom(1.6); else if (b.dataset.z === 'out') zoom(1 / 1.6); else { vb = {...startVB}; apply(); }
+  });
+  // Ziehen & Zwei-Finger-Zoom
+  const ptrs = new Map(); let moved = 0, start = null, pinch = null;
+  svg.addEventListener('pointerdown', e => { ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY}); moved = 0; start = {x:e.clientX, y:e.clientY, vb:{...vb}}; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - b.x, a.y - b.y), w:vb.w}; } });
+  svg.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (ptrs.size === 2 && pinch) {
+      const [a, b] = [...ptrs.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const m = toSvg((a.x + b.x) / 2, (a.y + b.y) / 2); zoom(vb.w / (pinch.w * pinch.d / d), m.x, m.y); moved = 99; return;
+    }
+    if (!start) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y; moved = Math.max(moved, Math.hypot(dx, dy));
+    if (moved > 6 && start.vb.w < W) { const sc = vb.w / svg.getBoundingClientRect().width; vb.x = start.vb.x - dx * sc; vb.y = start.vb.y - dy * sc; clampVB(); apply(); }
+  });
+  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) start = null; };
+  svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up); svg.addEventListener('pointerleave', up);
+  svg.addEventListener('wheel', e => { e.preventDefault(); const m = toSvg(e.clientX, e.clientY); zoom(e.deltaY < 0 ? 1.25 : 0.8, m.x, m.y); }, {passive:false});
+  svg.addEventListener('click', e => {
+    if (moved > 8 || !opt.onPick) return;
+    const p = toSvg(e.clientX, e.clientY);
+    const g = e.target.closest('[data-kind]');
+    if (g) return opt.onPick({kind:g.dataset.kind, id:g.dataset.id, x:p.x, y:p.y});
+    const c = e.target.closest('[data-k]');
+    opt.onPick({kind: c ? 'laender' : 'wasser', id: c ? c.dataset.k : null, x:p.x, y:p.y});
+  });
+  const api = {
+    svg, zoomTo,
+    naechstesMeer(x, y){ let best = null, bd = 1e9; for (const m of RAW.meere) { const p = P(...m.punkt); const d = Math.hypot(p[0] - x, p[1] - y); if (d < bd) { bd = d; best = m; } } return bd < 150 ? best : null; },
+    mark(kind, id, cls){
+      if (kind === 'laender') svg.querySelectorAll(`[data-k="${id}"].m-land, [data-k="${id}"].m-micro`).forEach(el => el.classList.add(cls));
+      else if (kind === 'meere') { const m = RAW.meere.find(x => x.id === id); const p = P(...m.punkt); api.ring(p[0], p[1], cls, m.name); }
+      else svg.querySelectorAll(`[data-kind="${kind}"][data-id="${id}"] .m-geb, [data-kind="${kind}"][data-id="${id}"] .m-fluss`).forEach(el => el.classList.add(cls, 'hl'));
+    },
+    ring(x, y, cls, label){
+      over.insertAdjacentHTML('beforeend', `<circle class="m-ring ${cls}" data-s="18" cx="${x}" cy="${y}" r="18"/>` + (label ? `<text class="m-lbl ${cls}" data-s="13" x="${x}" y="${y}" dy=".35em" text-anchor="middle">${esc(label)}</text>` : ''));
+      apply();
+    },
+    label(x, y, text, cls = ''){ over.insertAdjacentHTML('beforeend', `<text class="m-lbl ${cls}" data-s="13" x="${x}" y="${y}" dy="-1.15em" text-anchor="middle">${esc(text)}</text>`); apply(); },
+    clear(){ svg.querySelectorAll('.ok,.bad,.hl,.soft').forEach(el => el.classList.remove('ok', 'bad', 'hl', 'soft')); over.innerHTML = ''; },
+    markers(list){ // [{n, x, y, cls}]
+      over.querySelectorAll('.m-mk').forEach(m => m.remove());
+      over.insertAdjacentHTML('beforeend', list.map(m => `<g class="m-mk ${m.cls || ''}" data-mk="${m.n}"><circle data-s="11" cx="${m.x}" cy="${m.y}" r="11"/><text data-s="12" x="${m.x}" y="${m.y}">${m.n}</text></g>`).join(''));
+      apply();
+    }
+  };
+  apply();
+  if (window.ResizeObserver) { const ro = new ResizeObserver(() => apply()); ro.observe(svg); cleanup.push(() => ro.disconnect()); }
+  return api;
+}
+
+/* ================= Navigation ================= */
+let cleanup = [];
+function nav(fn, tab = 'start'){
+  cleanup.forEach(f => f()); cleanup = [];
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  window.scrollTo(0, 0);
+  rnd = Math.random;
+  fn();
+}
+function every(ms, f){ const id = setInterval(f, ms); cleanup.push(() => clearInterval(id)); return id; }
+function later(ms, f){ const id = setTimeout(f, ms); cleanup.push(() => clearTimeout(id)); return id; }
+document.getElementById('logo').onclick = () => nav(home);
+document.querySelector('nav.tabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  nav({start:home, statistik:statistik, abzeichen:abzeichen}[b.dataset.tab], b.dataset.tab);
+});
+const backBtn = (label = 'Zurück') => `<button class="back" data-back><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>${label}</button>`;
+function bindBack(fn = home){ app.querySelectorAll('[data-back]').forEach(b => b.onclick = () => nav(fn)); }
+
+/* ================= Startseite ================= */
+const MODI = [
+  {id:'karteikarten', gruppe:'Lernen', name:'Karteikarten', text:'Karte umdrehen, dann „gewusst“ oder „nochmal“.', kats:KAT_IDS, run:karteikarten},
+  {id:'quiz', gruppe:'Lernen', name:'Quiz', text:'10 Fragen mit je vier Antworten.', kats:[...KAT_IDS, 'mix'], run:quiz},
+  {id:'tippen', gruppe:'Lernen', name:'Eintippen', text:'Antwort selbst schreiben. Kleine Tippfehler zählen trotzdem.', kats:[...KAT_IDS, 'mix'], run:tippen},
+  {id:'klick', gruppe:'Auf der Karte', name:'Karte anklicken', text:'„Wo liegt Spanien?“ – tippe auf die richtige Stelle.', kats:[...KAT_IDS, 'mix'], run:klickKarte},
+  {id:'stumm', gruppe:'Auf der Karte', name:'Stumme Karte', text:'Die Nummern auf der Karte selbst beschriften.', kats:KAT_IDS, run:stummeKarte},
+  {id:'dndhs', gruppe:'Zuordnen', name:'Hauptstädte ziehen', text:'Ziehe jede Hauptstadt auf ihr Land.', kats:['laender'], run:dndHauptstaedte},
+  {id:'dndfl', gruppe:'Zuordnen', name:'Flüsse ziehen', text:'Ziehe Flüsse auf alle Länder, durch die sie fließen.', kats:['fluesse'], run:dndFluesse},
+  {id:'flussreise', gruppe:'Zuordnen', name:'Flussreise', text:'Wähle alle Länder, durch die der Fluss fließt.', kats:['fluesse'], run:flussreise},
+  {id:'werbinich', gruppe:'Knobeln', name:'Wer bin ich?', text:'Rate mit möglichst wenigen Hinweisen.', kats:['fluesse', 'gebirge', 'meere', 'laender', 'mix'], run:werBinIch},
+  {id:'wf', gruppe:'Knobeln', name:'Wahr oder falsch', text:'Schnelle Aussagen: stimmt das?', kats:[...KAT_IDS, 'mix'], run:wahrFalsch},
+  {id:'rennen', gruppe:'Herausforderung', name:'Zeitrennen', text:'So viele Hauptstädte wie möglich in 60 Sekunden.', kats:['laender'], run:zeitrennen},
+  {id:'serie', gruppe:'Herausforderung', name:'Serien-Modus', text:'Wie viele richtige Antworten schaffst du in Folge?', kats:['mix'], run:serie},
+  {id:'pruefung', gruppe:'Herausforderung', name:'Prüfungsmodus', text:'20 gemischte Fragen in 10 Minuten, mit Note.', kats:['mix'], run:pruefung}
+];
+const katName = k => k === 'mix' ? 'Gemischt' : KATS[k].name;
+function home(){
+  const d = S.daily[heute()];
+  const weak = schwaechen(15);
+  const gruppen = uniq(MODI.map(m => m.gruppe));
+  app.innerHTML = `<div class="stack">
+    <section class="card daily stack" data-kat="mix" style="gap:10px">
+      <div class="eyebrow">Tägliche Challenge · ${new Date().toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'})}</div>
+      <h2>5 gemischte Fragen für heute</h2>
+      ${d ? `<p class="muted" style="margin:0">Heute geschafft: ${d.richtig} von 5 richtig <span class="stars" style="font-size:1.1rem">${sternHtml(sterne(d.richtig / 5))}</span>. Morgen gibt es neue Fragen.</p>`
+          : `<p class="muted" style="margin:0">Für jeden Tag gibt es andere Fragen. Wer fertig wird, bekommt 20 Bonuspunkte.</p><button class="btn" id="dailyGo" style="background:var(--gold);color:#1b1300">Challenge starten</button>`}
+    </section>
+    <button class="btn sec wide" id="weakGo" data-kat="mix">Meine Schwächen üben${weak.length ? ` <span class="muted small">(${weak.length} Karten)</span>` : ''}</button>
+    <div class="legend">${KAT_IDS.map(k => `<span data-kat="${k}"><i class="dot"></i>${KATS[k].name}</span>`).join('')}</div>
+    ${gruppen.map(g => `<section class="sect"><h2>${g}</h2><div class="modes">${MODI.filter(m => m.gruppe === g).map(m => `
+      <button class="mode" data-mode="${m.id}"><b>${m.name}</b><span>${m.text}</span><span class="dots">${m.kats.filter(k => k !== 'mix').map(k => `<i class="dot" data-kat="${k}"></i>`).join('') || KAT_IDS.map(k => `<i class="dot" data-kat="${k}"></i>`).join('')}</span></button>`).join('')}</div></section>`).join('')}
+  </div>`;
+  app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => nav(() => setup(MODI.find(m => m.id === b.dataset.mode))));
+  const dg = document.getElementById('dailyGo'); if (dg) dg.onclick = () => nav(daily);
+  document.getElementById('weakGo').onclick = () => nav(schwaechenUeben);
+}
+
+/* ================= Setup je Modus ================= */
+function setup(m){
+  if (m.kats.length === 1) return m.run(m.kats[0]);
+  let kat = m.kats[0], dir = 'lh';
+  const render = () => {
+    app.innerHTML = `<div class="stack" data-kat="${kat}">${backBtn()}
+      <div><h1 style="font-size:1.8rem">${m.name}</h1><p class="muted" style="margin:.3em 0 0">${m.text}</p></div>
+      <div class="stack" style="gap:8px"><div class="eyebrow">Kategorie</div>
+      <div class="chips">${m.kats.map(k => `<button class="chip ${k === kat ? 'on' : ''}" data-kat="${k}" data-k="${k}"><i class="dot"></i>${katName(k)}</button>`).join('')}</div></div>
+      ${m.id === 'karteikarten' && kat === 'laender' ? `<div class="stack" style="gap:8px"><div class="eyebrow">Richtung</div><div class="chips">${[['lh', 'Land → Hauptstadt'], ['hl', 'Hauptstadt → Land'], ['mix', 'Gemischt']].map(([v, t]) => `<button class="chip ${v === dir ? 'on' : ''}" data-dir="${v}">${t}</button>`).join('')}</div></div>` : ''}
+      <button class="btn wide" id="go">Los geht's</button></div>`;
+    bindBack();
+    app.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { kat = b.dataset.k; render(); });
+    app.querySelectorAll('[data-dir]').forEach(b => b.onclick = () => { dir = b.dataset.dir; render(); });
+    document.getElementById('go').onclick = () => nav(() => m.run(kat, dir));
+  };
+  render();
+}
+const cardsFor = kat => kat === 'mix' ? ALL_CARDS : cardsOf(kat);
+/* Gemischt: Kategorie zuerst gleichmäßig wählen, dann Karte gewichtet */
+function mixPick(n, kats = KAT_IDS){
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(wPick(cardsOf(kats[i % kats.length]), 1)[0]);
+  return shuffle(out);
+}
+const pickCards = (kat, n) => kat === 'mix' ? mixPick(n) : wPick(cardsOf(kat), n);
+
+/* ================= Allgemeine Fragerunde ================= */
+/*
+ cfg: {titel, kat, fragen:[q] | naechste:()=>q, anzahl, feedback:true, schnell:false, stopBeiFehler:false,
+       zeit:Sek, ende:(res)=>extraHtml, wiederholen:()=>void, punkteProRichtig:10}
+*/
+function runde(cfg){
+  const st = {i:0, richtig:0, falsch:0, verlauf:[], start:Date.now(), fertig:false};
+  const total = cfg.fragen ? cfg.fragen.length : cfg.anzahl;
+  let restZeit = cfg.zeit || 0, timerEl;
+  app.innerHTML = `<div class="stack" data-kat="${cfg.kat}">
+    <div class="gamehead">${backBtn('Abbrechen')}<span class="tag">${katName(cfg.kat)}</span><span class="timer" id="tm"></span></div>
+    <h1 style="font-size:1.4rem">${cfg.titel}</h1>
+    ${total ? '<div class="prog"><i id="pg" style="width:0"></i></div>' : ''}
+    <div id="stage" class="stack"></div></div>`;
+  bindBack();
+  const stage = document.getElementById('stage'); timerEl = document.getElementById('tm');
+  const zeigeStand = () => {
+    if (total) document.getElementById('pg').style.width = (st.i / total * 100) + '%';
+    if (cfg.zeit) { const m = Math.floor(restZeit / 60), s = restZeit % 60; timerEl.textContent = (m ? m + ':' + String(s).padStart(2, '0') : s + ' s'); timerEl.classList.toggle('low', restZeit <= 10); }
+    else if (cfg.stopBeiFehler) timerEl.textContent = 'Serie: ' + st.richtig;
+    else timerEl.textContent = st.richtig + ' ✓';
+  };
+  if (cfg.zeit) every(1000, () => { if (st.fertig) return; restZeit--; zeigeStand(); if (restZeit <= 0) fertig(); });
+  function aktuelle(){ return cfg.fragen ? cfg.fragen[st.i] : cfg.naechste(st.i); }
+  function zeige(){
+    if (st.fertig) return;
+    if (total && st.i >= total) return fertig();
+    zeigeStand();
+    const q = st.q = aktuelle();
+    let body = `<div class="qcard"><div class="q ${q.lang || q.art === 'tf' ? 'long' : ''}">${esc(q.frage)}</div><div class="h">${esc(q.art === 'tf' ? 'Wahr oder falsch?' : q.hinweis)}</div></div>`;
+    if (q.art === 'mc') body += `<div class="opts">${q.optionen.map((o, i) => `<button class="opt" data-o="${i}">${esc(o)}</button>`).join('')}</div>`;
+    if (q.art === 'tf') body += `<div class="tf"><button class="opt" data-tf="1">Wahr</button><button class="opt" data-tf="0">Falsch</button></div>`;
+    if (q.art === 'tip') body += `<form id="tf" class="stack" style="gap:10px" autocomplete="off"><input class="inp" id="ti" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Antwort eingeben" aria-label="Antwort"><div class="row"><button class="btn" style="flex:1">Prüfen</button><button type="button" class="btn sec" id="skip">Weiß nicht</button></div></form>`;
+    body += '<div id="fb"></div>';
+    stage.innerHTML = body;
+    stage.querySelectorAll('[data-o]').forEach(b => b.onclick = () => antwort(q.optionen[+b.dataset.o], q.optionen[+b.dataset.o] === q.antwort, b));
+    stage.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => antwort(b.dataset.tf === '1' ? 'Wahr' : 'Falsch', (b.dataset.tf === '1') === q.antwort, b));
+    const f = document.getElementById('tf');
+    if (f) {
+      const ti = document.getElementById('ti'); ti.focus();
+      f.onsubmit = e => { e.preventDefault(); if (!ti.value.trim()) return ti.focus(); const r = pruefeTipp(ti.value, q.akzept); antwort(ti.value, r.ok, null, r); };
+      document.getElementById('skip').onclick = () => antwort('–', false, null, {});
+    }
+  }
+  function antwort(gegeben, ok, btn, tip){
+    const q = st.q;
+    if (q.beantwortet) return; q.beantwortet = true;
+    if (tip && tip.msg && !ok) { /* Ural-Hinweis: zählt als falsch, aber mit Erklärung */ }
+    ok ? st.richtig++ : st.falsch++;
+    record(q.card, ok);
+    st.verlauf.push({q, ok, gegeben});
+    st.i++;
+    const fbHost = document.getElementById('fb');
+    stage.querySelectorAll('.opt').forEach(b => b.disabled = true);
+    const ti = document.getElementById('ti'); if (ti) ti.disabled = true;
+    if (cfg.feedback === false) { zeigeStand(); return later(120, zeige); }
+    if (q.art === 'mc') stage.querySelectorAll('[data-o]').forEach(b => { const o = q.optionen[+b.dataset.o]; if (o === q.antwort) b.classList.add('ok'); else if (b === btn) b.classList.add('bad'); });
+    if (q.art === 'tf') stage.querySelectorAll('[data-tf]').forEach(b => { const v = b.dataset.tf === '1'; if (v === q.antwort) b.classList.add('ok'); else b.classList.add('bad'); if (b !== btn) b.style.opacity = .6; });
+    if (ti) ti.classList.add(ok ? 'ok-box' : 'bad-box');
+    zeigeStand();
+    const loesung = q.art === 'tf' ? (q.antwort ? 'Die Aussage stimmt.' : 'Die Aussage stimmt nicht.') : 'Richtig ist: ' + q.antwort;
+    let txt = ok ? `<b class="t-ok">Richtig!</b>` : `<b class="t-bad">Leider falsch.</b><span><strong>${esc(loesung)}</strong></span>`;
+    if (ok && tip && !tip.exakt) txt += `<span>Fast perfekt geschrieben: <strong>${esc(q.antwort)}</strong></span>`;
+    if (tip && tip.msg) txt += `<span>${esc(tip.msg)}</span>`;
+    if (q.erkl && (!ok || q.art === 'tf')) txt += `<span class="small">${esc(q.erkl)}</span>`;
+    const ende = cfg.stopBeiFehler && !ok;
+    if (cfg.schnell) {
+      fbHost.innerHTML = `<div class="fb ${ok ? 'ok' : 'bad'}">${txt}</div>`;
+      return later(ok ? 350 : 1100, () => ende ? fertig() : zeige());
+    }
+    fbHost.innerHTML = `<div class="stack" style="gap:10px"><div class="fb ${ok ? 'ok' : 'bad'}">${txt}</div><button class="btn wide" id="nx">${ende || (total && st.i >= total) ? 'Auswertung' : 'Weiter'}</button></div>`;
+    const nx = document.getElementById('nx'); nx.focus({preventScroll:true}); nx.scrollIntoView({block:'nearest', behavior:'smooth'});
+    nx.onclick = () => ende ? fertig() : zeige();
+  }
+  function fertig(){
+    if (st.fertig) return; st.fertig = true;
+    ergebnis({titel:cfg.titel, kat:cfg.kat, richtig:st.richtig, gesamt:st.richtig + st.falsch, verlauf:st.verlauf, extra:cfg.ende, wiederholen:cfg.wiederholen, punkte:st.richtig * (cfg.punkteProRichtig || 10), sterneBasis:cfg.sterneBasis});
+  }
+  zeige();
+}
+
+function ergebnis(r){
+  const anteil = r.gesamt ? r.richtig / r.gesamt : 0;
+  const st = r.sterneBasis ? r.sterneBasis(r) : sterne(anteil);
+  let punkte = r.punkte + st * 5;
+  S.punkte += punkte; S.runden++;
+  if (r.gesamt >= 5 && r.richtig === r.gesamt) S.perfekt++;
+  save();
+  const extra = r.extra ? r.extra(r) : '';
+  const neu = pruefeAbz();
+  const fehler = r.verlauf ? r.verlauf.filter(v => !v.ok) : [];
+  app.innerHTML = `<div class="stack" data-kat="${r.kat}">
+    <div class="card stack" style="align-items:center;text-align:center;gap:8px">
+      <div class="eyebrow">${esc(r.titel)} · Auswertung</div>
+      <div class="stars">${sternHtml(st)}</div>
+      <div class="big">${r.richtig}${r.gesamt != null ? `<span class="muted" style="font-size:1.4rem"> / ${r.gesamt}</span>` : ''}</div>
+      <div class="muted">${r.label || 'richtige Antworten'}</div>
+      <div class="pill" style="margin:6px 0 0"><span class="st">★</span>+${fmt(punkte)} Punkte</div>
+    </div>
+    ${extra}
+    ${neu.map((a, i) => `<div class="card row" style="flex-wrap:nowrap">${medal(ABZ.indexOf(a))}<div><div class="eyebrow">Neues Abzeichen</div><b style="font-family:var(--f-display);font-size:1.15rem">${a.name}</b><div class="muted small">${a.text}</div></div></div>`).join('')}
+    ${fehler.length && !r.ohneFehlerliste ? `<div class="card"><h2 style="font-size:1.1rem;margin-bottom:6px">Das übst du nochmal</h2><ul class="plain review">${fehler.map(v => `<li><span>${esc(v.q.frage)}${v.q.art === 'tf' ? '' : ' <span class="muted small">(' + esc(v.q.hinweis) + ')</span>'}</span><span class="small">Deine Antwort: <span style="color:var(--bad)">${esc(v.gegeben)}</span> · Richtig: <strong style="color:var(--ok)">${esc(v.q.art === 'tf' ? (v.q.antwort ? 'Wahr' : 'Falsch') : v.q.antwort)}</strong></span></li>`).join('')}</ul></div>` : ''}
+    <div class="row">${r.wiederholen ? '<button class="btn" id="again" style="flex:1">Nochmal spielen</button>' : ''}<button class="btn sec" id="home" style="flex:1">Zur Übersicht</button></div>
+  </div>`;
+  if (r.wiederholen) document.getElementById('again').onclick = () => nav(r.wiederholen);
+  document.getElementById('home').onclick = () => nav(home);
+  if (neu.length) toast('Neues Abzeichen: ' + neu.map(a => a.name).join(', '));
+}
+
+/* ================= 1 Karteikarten ================= */
+function karteikarten(kat, dir = 'lh'){
+  const deck = pickCards(kat, 10).map(c => ({c, d: dir === 'mix' ? (rnd() < .5 ? 'lh' : 'hl') : dir}));
+  let gewusst = 0, nochmal = 0; const gesehen = new Set(), erstOk = new Set();
+  app.innerHTML = `<div class="stack" data-kat="${kat}"><div class="gamehead">${backBtn('Abbrechen')}<span class="tag">${KATS[kat].name}</span><span class="timer" id="tm"></span></div><h1 style="font-size:1.4rem">Karteikarten</h1><div id="stage" class="stack"></div></div>`;
+  bindBack();
+  const stage = document.getElementById('stage');
+  function zeige(){
+    document.getElementById('tm').textContent = deck.length + ' übrig';
+    if (!deck.length) return ergebnis({titel:'Karteikarten', kat, richtig:erstOk.size, gesamt:gesehen.size, label:'beim ersten Mal gewusst', punkte:erstOk.size * 5, wiederholen:() => karteikarten(kat, dir)});
+    const {c, d} = deck[0]; const {it} = ITEM[c];
+    let vorne, label, hinten;
+    if (kat === 'laender') { vorne = d === 'lh' ? it.name : it.hauptstadt; hinten = d === 'lh' ? it.hauptstadt : it.name; label = d === 'lh' ? 'Hauptstadt' : 'Land'; }
+    else { vorne = it.name; label = kat === 'meere' ? (it.info ? 'Lage' : 'Grenzt an') : kat === 'gebirge' ? 'Liegt in' : 'Fließt durch'; hinten = kat === 'meere' && it.info ? cap(it.info) : it.laender.map(lname).join(', '); }
+    const vorneHint = kat === 'laender' ? (d === 'lh' ? 'Wie heißt die Hauptstadt?' : 'Zu welchem Land gehört sie?') : kat === 'meere' ? 'Wo liegt es?' : kat === 'gebirge' ? 'In welchen Ländern liegt es?' : 'Durch welche Länder fließt er?';
+    stage.innerHTML = `<button class="flip" id="fl" aria-label="Karte umdrehen"><div class="in">
+      <div class="side"><div class="eyebrow">${KATS[kat].name}</div><div class="w">${esc(vorne)}</div><div class="x">${esc(vorneHint)}</div><div class="muted small">Tippen zum Umdrehen</div></div>
+      <div class="side back-s"><div class="eyebrow">${esc(vorne)} · ${esc(label)}</div><div class="w" ${hinten.length > 30 ? 'style="font-size:1.2rem"' : ''}>${esc(hinten)}</div></div>
+    </div></button>
+    <div class="row" id="acts" style="visibility:hidden"><button class="btn sec" id="no" style="flex:1;border-color:var(--bad)">Nochmal</button><button class="btn" id="yes" style="flex:1;background:var(--ok)">Gewusst</button></div>`;
+    const fl = document.getElementById('fl');
+    fl.onclick = () => { fl.classList.toggle('turned'); document.getElementById('acts').style.visibility = 'visible'; };
+    document.getElementById('yes').onclick = () => { if (!gesehen.has(c)) erstOk.add(c); gesehen.add(c); record(c, true); deck.shift(); zeige(); };
+    document.getElementById('no').onclick = () => { gesehen.add(c); record(c, false); deck.push(deck.shift()); zeige(); };
+  }
+  zeige();
+}
+
+/* ================= 2 Quiz, 3 Eintippen, 9 Wahr/Falsch ================= */
+function quiz(kat){ runde({titel:'Quiz', kat, fragen:pickCards(kat, 10).map(c => frage(c, 'mc')), wiederholen:() => quiz(kat)}); }
+function tippen(kat){ runde({titel:'Eintippen', kat, fragen:pickCards(kat, 10).map(c => frage(c, 'tip')), punkteProRichtig:15, wiederholen:() => tippen(kat)}); }
+function wahrFalsch(kat){ runde({titel:'Wahr oder falsch', kat, fragen:pickCards(kat, 12).map(wfFrage), wiederholen:() => wahrFalsch(kat)}); }
+function schwaechenUeben(){
+  const weak = schwaechen(15);
+  if (weak.length < 3) {
+    app.innerHTML = `<div class="stack">${backBtn()}<div class="card stack"><h1 style="font-size:1.5rem">Noch keine Schwächen gefunden</h1><p class="muted" style="margin:0">Spiele erst ein paar Runden. Karten, bei denen du dich irrst, landen automatisch hier.</p><button class="btn" id="q" data-kat="mix">Gemischtes Quiz starten</button></div></div>`;
+    bindBack(); document.getElementById('q').onclick = () => nav(() => quiz('mix')); return;
+  }
+  runde({titel:'Meine Schwächen', kat:'mix', fragen:wPick(weak, 10).map(c => rnd() < .25 ? wfFrage(c) : frage(c, 'mc')), wiederholen:schwaechenUeben});
+}
+
+/* ================= 10 Zeitrennen ================= */
+function zeitrennen(){
+  runde({titel:'Zeitrennen', kat:'laender', zeit:60, schnell:true, naechste:() => frage(wPick(cardsOf('laender'), 1)[0], 'mc'), punkteProRichtig:5,
+    sterneBasis:r => r.richtig >= 20 ? 3 : r.richtig >= 12 ? 2 : r.richtig >= 6 ? 1 : 0,
+    ende:r => { const alt = S.best.rennen; if (r.richtig > alt) { S.best.rennen = r.richtig; save(); } return `<div class="card">${r.richtig > alt ? '<b>Neuer Rekord!</b> ' : ''}Dein Rekord: <strong>${Math.max(alt, r.richtig)}</strong> Hauptstädte in 60 Sekunden.</div>`; },
+    wiederholen:zeitrennen});
+}
+/* ================= 11 Serien-Modus ================= */
+function serie(){
+  runde({titel:'Serien-Modus', kat:'mix', stopBeiFehler:true, naechste:i => { const c = mixPick(1, [pick(KAT_IDS)])[0]; return rnd() < .3 ? wfFrage(c) : frage(c, 'mc'); },
+    sterneBasis:r => r.richtig >= 20 ? 3 : r.richtig >= 10 ? 2 : r.richtig >= 5 ? 1 : 0,
+    ende:r => { const alt = S.best.serie; if (r.richtig > alt) { S.best.serie = r.richtig; save(); } return `<div class="card">${r.richtig > alt ? '<b>Neuer Rekord!</b> ' : ''}Längste Serie bisher: <strong>${Math.max(alt, r.richtig)}</strong>.</div>`; },
+    wiederholen:serie});
+}
+/* ================= 12 Prüfungsmodus ================= */
+function note(p){ return p >= .92 ? 1 : p >= .81 ? 2 : p >= .67 ? 3 : p >= .5 ? 4 : p >= .3 ? 5 : 6; }
+const NOTEN = ['', 'sehr gut', 'gut', 'befriedigend', 'ausreichend', 'mangelhaft', 'ungenügend'];
+function pruefung(){
+  app.innerHTML = `<div class="stack" data-kat="mix">${backBtn()}<div class="card stack"><h1 style="font-size:1.6rem">Prüfungsmodus</h1>
+    <ul style="margin:0;padding-left:1.2em" class="stack small"><li>20 Fragen aus Ländern, Meeren, Gebirgen und Flüssen</li><li>Auswahl-, Eintipp- und Wahr-oder-falsch-Fragen gemischt</li><li>10 Minuten Zeit. Was nicht beantwortet ist, zählt als falsch.</li><li>Du siehst erst am Ende, was richtig war – wie in einer echten Arbeit.</li></ul>
+    <button class="btn" id="go">Prüfung beginnen</button></div></div>`;
+  bindBack();
+  document.getElementById('go').onclick = () => {
+    const cards = mixPick(20);
+    const arten = shuffle([...Array(8).fill('mc'), ...Array(6).fill('tip'), ...Array(6).fill('tf')]);
+    const fragen = cards.map((c, i) => arten[i] === 'tf' ? wfFrage(c) : frage(c, arten[i]));
+    runde({titel:'Prüfung', kat:'mix', fragen, zeit:600, feedback:false,
+      sterneBasis:r => [0, 3, 3, 2, 1, 0, 0][note(r.richtig / 20)],
+      ende:r => { const n = note(r.richtig / 20); if (S.best.pruefung == null || n < S.best.pruefung) { S.best.pruefung = n; save(); } r.gesamt = 20;
+        return `<div class="card row" style="flex-wrap:nowrap;gap:16px"><div class="big" style="color:var(--${n <= 2 ? 'ok' : n <= 4 ? 'gold' : 'bad'})">${n}</div><div><b style="font-family:var(--f-display);font-size:1.2rem">Note ${n} – ${NOTEN[n]}</b><div class="muted small">${r.richtig} von 20 Punkten (${Math.round(r.richtig / 20 * 100)} %). Bewertung: ab 92 % Note 1, ab 81 % Note 2, ab 67 % Note 3, ab 50 % Note 4.</div></div></div>`; },
+      wiederholen:pruefung});
+  };
+}
+/* ================= Tägliche Challenge ================= */
+function daily(){
+  const t = heute(); let seed = 0; for (const ch of t) seed = (seed * 31 + ch.charCodeAt(0)) | 0;
+  rnd = mulberry(seed);
+  const cards = KAT_IDS.map(k => pick(cardsOf(k))); cards.push(pick(ALL_CARDS));
+  const fragen = shuffle(cards).map((c, i) => i % 2 ? wfFrage(c) : frage(c, 'mc'));
+  rnd = Math.random;
+  runde({titel:'Tägliche Challenge', kat:'mix', fragen,
+    ende:r => { S.daily[t] = {richtig:r.richtig}; S.punkte += 20; save(); return '<div class="card"><b>+20 Bonuspunkte</b> für die heutige Challenge. Morgen wartet die nächste.</div>'; }});
+}
+
+/* ================= 4 Karte anklicken ================= */
+function klickAufgabe(c){
+  const {kat, it} = ITEM[c];
+  return kat === 'laender' ? `Wo liegt ${it.name}?` : kat === 'meere' ? `Wo ist ${it.nom}?` : `Zeig ${it.nom}.`;
+}
+function klickKarte(kat){
+  const cards = pickCards(kat, 10);
+  let i = 0, richtig = 0; const verlauf = [];
+  const ebenen = {laender:true, gebirge: kat === 'gebirge' || kat === 'mix', fluesse: kat === 'fluesse' || kat === 'mix'};
+  app.innerHTML = `<div class="stack" data-kat="${kat}"><div class="gamehead">${backBtn('Abbrechen')}<span class="tag">${katName(kat)}</span><span class="timer" id="tm"></span></div>
+    <div class="qcard" style="padding:14px 16px"><div class="q long" id="aufg"></div><div class="h" id="ah"></div></div>
+    <div id="map"></div><div id="fb"></div>
+    <p class="muted small" style="margin:0">Zoomen mit + / − oder zwei Fingern. Kleine Länder sind als Punkte eingezeichnet.</p></div>`;
+  bindBack();
+  let wartet = true;
+  const k = karte(document.getElementById('map'), {laender:true, kern: kat === 'laender', gebirge:ebenen.gebirge, fluesse:ebenen.fluesse, onPick});
+  function zeige(){
+    if (i >= cards.length) return ergebnis({titel:'Karte anklicken', kat, richtig, gesamt:cards.length, verlauf, punkte:richtig * 10, wiederholen:() => klickKarte(kat), ohneFehlerliste:true});
+    k.clear(); wartet = true;
+    const c = cards[i]; const ck = ITEM[c].kat;
+    k.svg.classList.toggle('noLines', ck === 'laender');
+    document.getElementById('aufg').textContent = klickAufgabe(c);
+    document.getElementById('ah').textContent = ck === 'meere' ? 'Tippe ins Wasser.' : ck === 'laender' ? 'Tippe auf das Land.' : 'Tippe auf die Linie.';
+    document.getElementById('tm').textContent = (i + 1) + ' / ' + cards.length;
+    document.getElementById('fb').innerHTML = '';
+  }
+  function onPick(p){
+    if (!wartet) return;
+    const c = cards[i], {kat:ck, it} = ITEM[c];
+    let gew = null, gewName = '';
+    const itemName = (kd, id) => kd === 'laender' ? lname(id) : KATS[kd].items.find(x => x.id === id).name;
+    if (ck === 'laender') { if (p.kind !== 'laender' || !QL.has(p.id)) return; gew = p.id; gewName = lname(p.id); }
+    else if (ck === 'meere') { const m = k.naechstesMeer(p.x, p.y); if (m) { gew = m.id; gewName = m.name; } else gewName = 'eine Stelle ohne Meer aus der Liste'; }
+    else if (p.kind === 'gebirge' || p.kind === 'fluesse') { gew = p.kind === ck ? p.id : null; gewName = itemName(p.kind, p.id); }
+    else { document.getElementById('fb').innerHTML = '<div class="muted small">Tippe genau auf eine der Linien. Mit + kannst du hineinzoomen.</div>'; return; }
+    wartet = false;
+    const ok = gew === it.id;
+    record(c, ok); if (ok) { richtig++; S.kartenRichtig++; save(); }
+    verlauf.push({q:{frage:klickAufgabe(c), hinweis:'', antwort:it.name, art:'map'}, ok, gegeben:gewName});
+    if (!ok && gew) k.mark(ck === 'meere' ? 'meere' : ck, gew, 'bad');
+    k.mark(ck, it.id, 'ok');
+    if (ck === 'laender' && it.klein) { const pt = P(...it.lp); k.ring(pt[0], pt[1], 'ok'); }
+    const pt = P(...lp(ck, it)); if (ck !== 'meere') k.label(pt[0], pt[1], it.name, 'ok');
+    document.getElementById('fb').innerHTML = `<div class="stack" style="gap:10px"><div class="fb ${ok ? 'ok' : 'bad'}">${ok ? '<b class="t-ok">Richtig!</b>' : `<b class="t-bad">Leider falsch.</b><span>Du hast ${esc(gewName || 'daneben')} getippt. ${esc(it.name)} ist grün markiert.</span>`}</div><button class="btn wide" id="nx">${i + 1 >= cards.length ? 'Auswertung' : 'Weiter'}</button></div>`;
+    document.getElementById('nx').onclick = () => { i++; zeige(); };
+    document.getElementById('nx').scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
+  zeige();
+}
+
+/* ================= 5 Stumme Karte ================= */
+function stummeKarte(kat){
+  const n = kat === 'laender' ? 8 : kat === 'meere' ? 7 : 6;
+  const cards = kat === 'meere' ? shuffle(cardsOf('meere')) : wPick(cardsOf(kat), n);
+  const items = cards.map(c => ITEM[c].it);
+  const zu = {}; let akt = 1, geprueft = false;
+  const namen = shuffle(items.map(it => it.name));
+  app.innerHTML = `<div class="stack" data-kat="${kat}"><div class="gamehead">${backBtn('Abbrechen')}<span class="tag">${KATS[kat].name}</span></div>
+    <h1 style="font-size:1.4rem">Stumme Karte</h1><p class="muted" style="margin:0">Wähle eine Nummer und tippe dann auf den passenden Namen.</p>
+    <div id="map"></div><div class="slots" id="slots"></div><div class="eyebrow">Namen</div><div class="chips" id="bank"></div><div id="act"></div></div>`;
+  bindBack();
+  const k = karte(document.getElementById('map'), {laender:false, kern: kat === 'laender' && !items.some(it => it.id === 'island' || it.id === 'russland'), gebirge: kat === 'gebirge' ? items.map(i => i.id) : false, fluesse: kat === 'fluesse' ? items.map(i => i.id) : false});
+  const pos = items.map(it => P(...lp(kat, it)));
+  if (kat === 'laender') items.forEach(it => k.mark('laender', it.id, 'soft'));
+  k.svg.addEventListener('click', e => { const g = e.target.closest('[data-mk]'); if (g && !geprueft) { akt = +g.dataset.mk; render(); } });
+  function render(){
+    k.markers(items.map((it, i) => ({n:i + 1, x:pos[i][0], y:pos[i][1], cls: geprueft ? (zu[i + 1] === it.name ? 'ok' : 'bad') : (akt === i + 1 ? 'act' : '')})));
+    k.svg.querySelectorAll('.over .m-lbl').forEach(t => t.remove());
+    items.forEach((it, i) => { const v = zu[i + 1]; if (v || geprueft) k.label(pos[i][0], pos[i][1], geprueft && v !== it.name ? it.name : v, geprueft ? (v === it.name ? 'ok' : 'bad') : ''); });
+    document.getElementById('slots').innerHTML = items.map((it, i) => { const v = zu[i + 1]; const ok = v === it.name;
+      return `<button class="slot ${akt === i + 1 && !geprueft ? 'act' : ''} ${geprueft ? (ok ? 'ok-box' : 'bad-box') : ''}" data-slot="${i + 1}"><span class="n">${i + 1}</span><span class="v ${v ? '' : 'e'}">${v ? esc(v) : 'noch leer'}${geprueft && !ok ? ` <span class="small">→ <strong>${esc(it.name)}</strong></span>` : ''}</span></button>`; }).join('');
+    const benutzt = Object.values(zu);
+    document.getElementById('bank').innerHTML = namen.map(nm => `<button class="chip" data-nm="${esc(nm)}" ${benutzt.includes(nm) || geprueft ? 'disabled style="opacity:.4"' : ''}>${esc(nm)}</button>`).join('');
+    const voll = benutzt.length === items.length;
+    document.getElementById('act').innerHTML = geprueft ? '' : `<button class="btn wide" id="chk" ${voll ? '' : 'disabled'}>Prüfen</button>`;
+    app.querySelectorAll('[data-slot]').forEach(b => b.onclick = () => { if (geprueft) return; const s = +b.dataset.slot; if (zu[s] && akt === s) delete zu[s]; akt = s; render(); });
+    app.querySelectorAll('[data-nm]').forEach(b => b.onclick = () => {
+      zu[akt] = b.dataset.nm;
+      for (let j = 1; j <= items.length; j++) { const nx = (akt + j - 1) % items.length + 1; if (!zu[nx]) { akt = nx; break; } }
+      render();
+    });
+    const chk = document.getElementById('chk');
+    if (chk) chk.onclick = () => {
+      geprueft = true; let r = 0; const verlauf = [];
+      items.forEach((it, i) => { const ok = zu[i + 1] === it.name; if (ok) { r++; S.kartenRichtig++; } record(cards[i], ok); verlauf.push({ok, gegeben:zu[i + 1], q:{frage:'Nummer ' + (i + 1), hinweis:'Stumme Karte', antwort:it.name}}); });
+      save(); render();
+      document.getElementById('act').innerHTML = `<button class="btn wide" id="aus">Auswertung</button>`;
+      document.getElementById('aus').onclick = () => ergebnis({titel:'Stumme Karte', kat, richtig:r, gesamt:items.length, verlauf, punkte:r * 10, wiederholen:() => stummeKarte(kat), ohneFehlerliste:true});
+    };
+  }
+  render();
+}
+
+/* ================= 6 Drag & Drop ================= */
+/* Ziehen mit Maus und Finger; Antippen + Ziel antippen geht auch */
+function dnd(root, onDrop){
+  let sel = null, drag = null;
+  root.addEventListener('pointerdown', e => {
+    const ch = e.target.closest('[data-chip]'); if (!ch || ch.dataset.lock) return;
+    e.preventDefault();
+    drag = {ch, x:e.clientX, y:e.clientY, ghost:null, id:e.pointerId};
+  });
+  const move = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    if (!drag.ghost && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 6) {
+      drag.ghost = drag.ch.cloneNode(true); drag.ghost.classList.add('ghost'); document.body.appendChild(drag.ghost);
+    }
+    if (drag.ghost) {
+      const vh = window.innerHeight;
+      if (e.clientY > vh - 90) window.scrollBy(0, 14); else if (e.clientY < 110) window.scrollBy(0, -14);
+      drag.ghost.style.left = e.clientX + 'px'; drag.ghost.style.top = e.clientY + 'px';
+      root.querySelectorAll('.zone.over').forEach(z => z.classList.remove('over'));
+      const z = document.elementFromPoint(e.clientX, e.clientY); const zone = z && z.closest('[data-zone]'); if (zone && zone.classList.contains('zone')) zone.classList.add('over');
+    }
+  };
+  const up = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    root.querySelectorAll('.zone.over').forEach(z => z.classList.remove('over'));
+    if (d.ghost) {
+      d.ghost.remove();
+      const z = document.elementFromPoint(e.clientX, e.clientY); const zone = z && z.closest('[data-zone]');
+      if (zone) onDrop(d.ch.dataset.chip, zone.dataset.zone, d.ch.dataset.from);
+      sel = null;
+    } else {
+      sel = sel && sel.chip === d.ch.dataset.chip && sel.from === d.ch.dataset.from ? null : {chip:d.ch.dataset.chip, from:d.ch.dataset.from};
+      root.querySelectorAll('[data-chip]').forEach(c => c.classList.toggle('sel', !!sel && c.dataset.chip === sel.chip && c.dataset.from === sel.from));
+    }
+  };
+  document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+  cleanup.push(() => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up); });
+  root.addEventListener('click', e => {
+    if (!sel) return;
+    if (e.target.closest('[data-chip]')) return;
+    const zone = e.target.closest('[data-zone]'); if (!zone) return;
+    const s = sel; sel = null; onDrop(s.chip, zone.dataset.zone, s.from);
+  });
+}
+function dndHauptstaedte(){
+  const cards = wPick(cardsOf('laender'), 6); const its = cards.map(c => ITEM[c].it);
+  const hs = shuffle(its.map(i => i.id)); // Chip-ID = Land-ID der Hauptstadt
+  const zu = {}; let geprueft = false;
+  app.innerHTML = `<div class="stack" data-kat="laender"><div class="gamehead">${backBtn('Abbrechen')}<span class="tag">Länder</span></div>
+    <h1 style="font-size:1.4rem">Hauptstädte zuordnen</h1><p class="muted" style="margin:0">Ziehe jede Hauptstadt auf ihr Land – oder tippe erst die Stadt, dann das Land an.</p>
+    <div class="bank" data-zone="bank" id="bank"></div><div class="zones two" id="zones"></div><div id="act"></div></div>`;
+  bindBack();
+  const root = app.firstChild;
+  const chip = (id, from, cls = '') => `<span class="dchip ${cls}" data-chip="${id}" data-from="${from}" ${geprueft ? 'data-lock="1"' : ''}>${esc(LAND[id].hauptstadt)}</span>`;
+  function render(){
+    const benutzt = Object.values(zu);
+    document.getElementById('bank').innerHTML = hs.filter(h => !benutzt.includes(h)).map(h => chip(h, 'bank')).join('') || '<span class="muted small" style="align-self:center">Alle Städte verteilt.</span>';
+    document.getElementById('zones').innerHTML = its.map(it => { const v = zu[it.id]; const ok = v === it.id;
+      return `<div class="zone ${geprueft ? (ok ? 'ok' : 'bad') : ''}" data-zone="${it.id}"><div class="zn">${esc(it.name)}</div><div class="zc">${v ? chip(v, it.id, geprueft ? (ok ? 'ok' : 'bad') : '') : '<span class="muted small" style="align-self:center">Hauptstadt hierher ziehen</span>'}${geprueft && !ok ? `<span class="dchip miss" data-lock="1">${esc(it.hauptstadt)}</span>` : ''}</div></div>`; }).join('');
+    document.getElementById('act').innerHTML = geprueft ? '<button class="btn wide" id="aus">Auswertung</button>' : `<button class="btn wide" id="chk" ${benutzt.length === its.length ? '' : 'disabled'}>Prüfen</button>`;
+    const chk = document.getElementById('chk');
+    if (chk) chk.onclick = () => { geprueft = true; render(); };
+    const aus = document.getElementById('aus');
+    if (aus) aus.onclick = () => {
+      let r = 0; const verlauf = [];
+      its.forEach((it, i) => { const ok = zu[it.id] === it.id; if (ok) r++; record(cards[i], ok); verlauf.push({ok, gegeben: zu[it.id] ? LAND[zu[it.id]].hauptstadt : '–', q:{frage:it.name, hinweis:'Hauptstadt', antwort:it.hauptstadt}}); });
+      ergebnis({titel:'Hauptstädte zuordnen', kat:'laender', richtig:r, gesamt:its.length, verlauf, punkte:r * 10, wiederholen:dndHauptstaedte});
+    };
+  }
+  dnd(root, (id, zone, from) => {
+    if (geprueft) return;
+    if (from && from !== 'bank') delete zu[from];
+    if (zone !== 'bank') { zu[zone] = id; }
+    render();
+  });
+  render();
+}
+function dndFluesse(){
+  // 3 Flüsse, deren Länder zusammen nicht zu viele sind
+  let rivers;
+  for (let t = 0; t < 30; t++) { rivers = wPick(cardsOf('fluesse'), 3).map(c => ITEM[c].it); if (uniq(rivers.flatMap(r => r.laender)).length <= 9) break; }
+  const echt = uniq(rivers.flatMap(r => r.laender));
+  const zonen = shuffle([...echt, ...nahe(echt, 2, echt, true)]);
+  const zu = {}; zonen.forEach(z => zu[z] = []);
+  let geprueft = false;
+  app.innerHTML = `<div class="stack" data-kat="fluesse"><div class="gamehead">${backBtn('Abbrechen')}<span class="tag">Flüsse</span></div>
+    <h1 style="font-size:1.4rem">Flüsse zuordnen</h1><p class="muted" style="margin:0">Ziehe jeden Fluss auf <strong>alle</strong> Länder, durch die er fließt. Einen Fluss kannst du mehrmals verwenden. Manche Länder bekommen keinen Fluss. Tippe einen Fluss in einem Land an und ziehe ihn zurück, um ihn zu entfernen.</p>
+    <div class="bank" data-zone="bank" id="bank"></div><div class="zones" id="zones"></div><div id="act"></div></div>`;
+  bindBack();
+  const root = app.firstChild;
+  const rn = id => RAW.fluesse.find(f => f.id === id).name;
+  function render(){
+    document.getElementById('bank').innerHTML = rivers.map(r => `<span class="dchip" data-chip="${r.id}" data-from="bank" ${geprueft ? 'data-lock="1"' : ''}>${esc(r.name)}</span>`).join('');
+    document.getElementById('zones').innerHTML = zonen.map(z => {
+      const soll = rivers.filter(r => r.laender.includes(z)).map(r => r.id);
+      const ok = sameList(soll, zu[z]);
+      return `<div class="zone ${geprueft ? (ok ? 'ok' : 'bad') : ''}" data-zone="${z}"><div class="zn">${esc(lname(z))}</div><div class="zc">${zu[z].map(id => `<span class="dchip ${geprueft ? (soll.includes(id) ? 'ok' : 'bad') : ''}" data-chip="${id}" data-from="${z}" ${geprueft ? 'data-lock="1"' : ''}>${esc(rn(id))}</span>`).join('')}${geprueft ? soll.filter(id => !zu[z].includes(id)).map(id => `<span class="dchip miss" data-lock="1">fehlt: ${esc(rn(id))}</span>`).join('') : ''}${!zu[z].length && !geprueft ? '<span class="muted small" style="align-self:center">kein Fluss</span>' : ''}${geprueft && ok && !soll.length ? '<span class="small" style="align-self:center">Richtig: kein Fluss</span>' : ''}</div></div>`;
+    }).join('');
+    document.getElementById('act').innerHTML = geprueft ? '<button class="btn wide" id="aus">Auswertung</button>' : '<button class="btn wide" id="chk">Prüfen</button>';
+    const chk = document.getElementById('chk'); if (chk) chk.onclick = () => { geprueft = true; render(); };
+    const aus = document.getElementById('aus');
+    if (aus) aus.onclick = () => {
+      let r = 0; const verlauf = [];
+      rivers.forEach(rv => {
+        const gesetzt = zonen.filter(z => zu[z].includes(rv.id));
+        const ok = sameList(gesetzt, rv.laender);
+        if (ok) r++; record('fluesse:' + rv.id, ok);
+        verlauf.push({ok, gegeben:gesetzt.map(lname).join(', ') || '–', q:{frage:rv.name, hinweis:'Länder', antwort:rv.laender.map(lname).join(', ')}});
+      });
+      ergebnis({titel:'Flüsse zuordnen', kat:'fluesse', richtig:r, gesamt:rivers.length, verlauf, punkte:r * 20, wiederholen:dndFluesse});
+    };
+  }
+  dnd(root, (id, zone, from) => {
+    if (geprueft) return;
+    if (from && from !== 'bank') zu[from] = zu[from].filter(x => x !== id);
+    if (zone !== 'bank' && !zu[zone].includes(id)) zu[zone].push(id);
+    render();
+  });
+  render();
+}
+
+/* ================= 7 Flussreise ================= */
+function flussreise(){
+  const cards = wPick(cardsOf('fluesse'), 5); let i = 0, richtig = 0; const verlauf = [];
+  app.innerHTML = `<div class="stack" data-kat="fluesse"><div class="gamehead">${backBtn('Abbrechen')}<span class="tag">Flüsse</span><span class="timer" id="tm"></span></div><h1 style="font-size:1.4rem">Flussreise</h1><div id="stage" class="stack"></div></div>`;
+  bindBack();
+  const stage = document.getElementById('stage');
+  function zeige(){
+    if (i >= cards.length) return ergebnis({titel:'Flussreise', kat:'fluesse', richtig, gesamt:cards.length, verlauf, punkte:richtig * 15, wiederholen:flussreise});
+    document.getElementById('tm').textContent = (i + 1) + ' / ' + cards.length;
+    const it = ITEM[cards[i]].it;
+    const opts = shuffle([...it.laender, ...nahe(it.laender, Math.max(4, 9 - it.laender.length), it.laender, true)]);
+    const gew = new Set();
+    stage.innerHTML = `<div class="qcard"><div class="q">${esc(it.name)}</div><div class="h">Durch welche Länder fließt ${esc(it.nom)}? Wähle alle aus.</div></div>
+      <div class="opts" id="ol">${opts.map(o => `<button class="opt" data-l="${o}" aria-pressed="false">${esc(lname(o))}</button>`).join('')}</div><div id="fb"><button class="btn wide" id="chk">Prüfen</button></div>`;
+    stage.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { const l = b.dataset.l; gew.has(l) ? gew.delete(l) : gew.add(l); b.classList.toggle('sel', gew.has(l)); b.setAttribute('aria-pressed', gew.has(l)); });
+    document.getElementById('chk').onclick = () => {
+      const ok = sameList([...gew], it.laender);
+      if (ok) richtig++; record(cards[i], ok);
+      verlauf.push({ok, gegeben:[...gew].map(lname).join(', ') || '–', q:{frage:it.name, hinweis:'Länder', antwort:it.laender.map(lname).join(', ')}});
+      stage.querySelectorAll('[data-l]').forEach(b => { const l = b.dataset.l, soll = it.laender.includes(l); b.disabled = true; b.classList.remove('sel'); if (soll && gew.has(l)) b.classList.add('ok'); else if (gew.has(l)) b.classList.add('bad'); else if (soll) b.classList.add('miss'); });
+      document.getElementById('fb').innerHTML = `<div class="stack" style="gap:10px"><div class="fb ${ok ? 'ok' : 'bad'}">${ok ? '<b class="t-ok">Richtig!</b>' : '<b class="t-bad">Nicht ganz.</b><span class="small">Grün umrandet = vergessen, rot = falsch gewählt.</span>'}<span class="small">${esc(erkl('fluesse', it))}</span></div><div id="mm"></div><button class="btn wide" id="nx">${i + 1 >= cards.length ? 'Auswertung' : 'Weiter'}</button></div>`;
+      const k = karte(document.getElementById('mm'), {fluesse:[it.id]});
+      it.laender.forEach(l => k.mark('laender', l, 'soft')); k.mark('fluesse', it.id, 'hl');
+      const xs = it.linie.map(p => P(...p)); const bx = [Math.min(...xs.map(p => p[0])), Math.max(...xs.map(p => p[0]))], by = [Math.min(...xs.map(p => p[1])), Math.max(...xs.map(p => p[1]))];
+      k.zoomTo((bx[0] + bx[1]) / 2, (by[0] + by[1]) / 2, Math.max(260, (bx[1] - bx[0]) * 1.8, (by[1] - by[0]) * 1.8 / (KARTE.h / KARTE.w)));
+      document.getElementById('nx').onclick = () => { i++; zeige(); };
+    };
+  }
+  zeige();
+}
+
+/* ================= 8 Wer bin ich? ================= */
+function hinweise(kat, it){
+  const h = [];
+  const und = (arr, vorn, weiter) => arr.forEach((l, i) => h.push(i === 0 ? vorn(l) : weiter(l)));
+  if (kat === 'fluesse') { h.push('Ich bin ein Fluss.'); und(it.laender, l => `Ich fließe durch ${akk(l)}.`, l => `… und durch ${akk(l)}.`); }
+  if (kat === 'gebirge') { h.push('Ich bin ein Gebirge.'); und(it.laender, l => `Ich liege ${inDat(l)}.`, l => `… und ${inDat(l)}.`); }
+  if (kat === 'meere') {
+    h.push(it.id === 'atlantik' ? 'Ich bin ein Ozean.' : 'Ich bin ein Meer.');
+    if (it.laender.length) und(it.laender, l => `Ich grenze an ${akk(l)}.`, l => `… und an ${akk(l)}.`);
+    else h.push(it.info.startsWith('zwischen') ? `Ich liege ${it.info}.` : `Ich bin der ${it.info}.`);
+  }
+  if (kat === 'laender') { h.push(`Ich bin ein Land in ${it.region}.`); h.push(`Meine Hauptstadt beginnt mit „${it.hauptstadt[0]}“.`); h.push(`Meine Hauptstadt hat ${it.hauptstadt.replace(/[^\p{L}]/gu, '').length} Buchstaben.`); }
+  h.push(`Mein Name hat ${it.name.replace(/[^\p{L}]/gu, '').length} Buchstaben.`);
+  h.push(`Mein Name beginnt mit „${it.name[0]}“.`);
+  if (kat === 'laender') h.push(`Meine Hauptstadt heißt ${it.hauptstadt}.`);
+  return h;
+}
+function werBinIch(kat){
+  const cards = pickCards(kat, 5); let i = 0, punkte = 0, geloest = 0; const verlauf = [];
+  app.innerHTML = `<div class="stack" data-kat="${kat}"><div class="gamehead">${backBtn('Abbrechen')}<span class="tag">${katName(kat)}</span><span class="timer" id="tm"></span></div><h1 style="font-size:1.4rem">Wer bin ich?</h1><div id="stage" class="stack"></div></div>`;
+  bindBack();
+  const stage = document.getElementById('stage');
+  function zeige(){
+    if (i >= cards.length) return ergebnis({titel:'Wer bin ich?', kat, richtig:geloest, gesamt:cards.length, verlauf, label:'ohne Fehlversuch gelöst', punkte:punkte * 4, wiederholen:() => werBinIch(kat),
+      extra:() => `<div class="card">Rätselpunkte: <strong>${punkte}</strong> von ${cards.length * 5} möglichen. Je weniger Hinweise, desto mehr Punkte.</div>`});
+    document.getElementById('tm').textContent = (i + 1) + ' / ' + cards.length;
+    const {kat:ck, it} = ITEM[cards[i]];
+    const hs = hinweise(ck, it); let n = 1, fehl = 0, fertig = false;
+    const opts = shuffle([it.name, ...sample(KATS[ck].items.filter(o => o !== it).map(o => o.name), 5)]);
+    const wert = () => Math.max(0, 6 - n - fehl);
+    function render(){
+      stage.innerHTML = `<div class="qcard"><div class="eyebrow">Hinweise</div><ol style="margin:4px 0 0;padding-left:1.3em;font-size:1.15rem" class="stack" id="hl">${hs.slice(0, n).map(x => `<li style="margin:0">${esc(x)}</li>`).join('')}</ol></div>
+        <div class="row"><span class="muted small" style="flex:1">Wert dieses Rätsels: <strong>${wert()}</strong> Punkte</span>${n < hs.length && !fertig ? '<button class="btn sec" id="more">Noch ein Hinweis</button>' : ''}</div>
+        <div class="opts">${opts.map(o => `<button class="opt" data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div><div id="fb"></div>`;
+      const more = document.getElementById('more'); if (more) more.onclick = () => { n++; render(); };
+      stage.querySelectorAll('[data-o]').forEach(b => { if (b.dataset.tried) b.disabled = true; b.onclick = () => rate(b.dataset.o); });
+      tried.forEach(o => { const b = stage.querySelector(`[data-o="${CSS.escape(o)}"]`); if (b) { b.disabled = true; b.classList.add('bad'); } });
+    }
+    const tried = [];
+    function rate(o){
+      if (fertig) return;
+      if (o === it.name) {
+        fertig = true; const p = wert(); punkte += p; const ok = fehl === 0; if (ok) geloest++;
+        record(cards[i], ok); verlauf.push({ok, gegeben:tried.join(', ') || it.name, q:{frage:'Wer bin ich?', hinweis:hs[1] || '', antwort:it.name}});
+        render();
+        stage.querySelector(`[data-o="${CSS.escape(o)}"]`).classList.add('ok');
+        stage.querySelectorAll('.opt').forEach(b => b.disabled = true);
+        document.getElementById('fb').innerHTML = `<div class="stack" style="gap:10px"><div class="fb ok"><b class="t-ok">Richtig – ich bin ${esc(it.name)}!</b><span>+${p} Punkte mit ${n} ${n === 1 ? 'Hinweis' : 'Hinweisen'}.</span></div><button class="btn wide" id="nx">${i + 1 >= cards.length ? 'Auswertung' : 'Nächstes Rätsel'}</button></div>`;
+        document.getElementById('nx').onclick = () => { i++; zeige(); };
+      } else {
+        tried.push(o); fehl++; if (n < hs.length) n++;
+        if (tried.length >= opts.length - 1) return rate(it.name);
+        render();
+        document.getElementById('fb').innerHTML = `<div class="fb bad"><b class="t-bad">Nein, das bin ich nicht.</b><span>Hier ist ein weiterer Hinweis.</span></div>`;
+      }
+    }
+    render();
+  }
+  zeige();
+}
+
+/* ================= Statistik ================= */
+function statistik(){
+  const agg = k => cardsOf(k).reduce((a, c) => { const s = S.cards[c]; if (s) { a.r += s.r; a.f += s.f; if (s.s >= 3) a.m++; } return a; }, {r:0, f:0, m:0});
+  const tot = KAT_IDS.map(agg).reduce((a, b) => ({r:a.r + b.r, f:a.f + b.f, m:a.m + b.m}), {r:0, f:0, m:0});
+  const weak = schwaechen(10);
+  const tage = [...Array(14)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - 13 + i); const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); return {key, d, h:S.hist[key] || {r:0, f:0}}; });
+  const maxN = Math.max(10, ...tage.map(t => t.h.r + t.h.f));
+  const CW = 380, CH = 190, pl = 30, pb = 30, pt = 10, bw = (CW - pl - 8) / 14;
+  const y = v => pt + (CH - pt - pb) * (1 - v / maxN);
+  const ticks = [0, Math.round(maxN / 2), maxN];
+  const chart = `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Antworten pro Tag in den letzten 14 Tagen">
+    ${ticks.map(t => `<line class="gl" x1="${pl}" x2="${CW - 4}" y1="${y(t)}" y2="${y(t)}"/><text x="${pl - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`).join('')}
+    ${tage.map((t, i) => { const n = t.h.r + t.h.f, x = pl + i * bw + 3, w = bw - 6; const yr = y(t.h.r), yn = y(n), y0 = y(0);
+      return `<g><title>${t.d.toLocaleDateString('de-DE', {day:'numeric', month:'short'})}: ${t.h.r} richtig, ${t.h.f} falsch${n ? ' (' + Math.round(t.h.r / n * 100) + ' %)' : ''}</title>
+      ${t.h.f ? `<rect x="${x}" y="${yn}" width="${w}" height="${Math.max(0, yr - yn - (t.h.r ? 2 : 0))}" rx="3" fill="var(--bad)" opacity=".75"/>` : ''}
+      ${t.h.r ? `<rect x="${x}" y="${yr}" width="${w}" height="${y0 - yr}" rx="3" fill="var(--ok)"/>` : ''}
+      <rect x="${x - 3}" y="${pt}" width="${bw}" height="${CH - pt - pb}" fill="transparent"/>
+      ${i % 2 === 1 || i === 13 ? `<text x="${x + w / 2}" y="${CH - pb + 16}" text-anchor="middle">${t.d.getDate()}.${t.d.getMonth() + 1}.</text>` : ''}</g>`; }).join('')}
+  </svg>`;
+  app.innerHTML = `<div class="stack">
+    <h1 style="font-size:1.8rem">Statistik</h1>
+    <div class="kpis"><div class="kpi"><b>${fmt(tot.r + tot.f)}</b><span>Antworten</span></div><div class="kpi"><b>${tot.r + tot.f ? Math.round(tot.r / (tot.r + tot.f) * 100) : 0} %</b><span>richtig</span></div><div class="kpi"><b>${tot.m}/${ALL_CARDS.length}</b><span>Karten gemeistert</span></div></div>
+    <section class="card stack" style="gap:12px"><h2 style="font-size:1.15rem">Erfolgsquote je Kategorie</h2>
+      ${KAT_IDS.map(k => { const a = agg(k), n = a.r + a.f, p = n ? Math.round(a.r / n * 100) : 0; return `<div class="kbar" data-kat="${k}"><span>${KATS[k].name}</span><span class="tr"><i style="width:${p}%"></i></span><span class="p">${n ? p + ' %' : '–'}</span></div><div class="muted small" style="margin-top:-8px;padding-left:calc(7.5em + 10px)">${a.r} richtig · ${a.f} falsch · ${a.m} von ${cardsOf(k).length} gemeistert</div>`; }).join('')}
+    </section>
+    <section class="card stack" style="gap:8px"><h2 style="font-size:1.15rem">Verlauf der letzten 14 Tage</h2>
+      <div class="legend"><span><i class="dot" style="background:var(--ok)"></i>richtig</span><span><i class="dot" style="background:var(--bad)"></i>falsch</span></div>
+      <div class="chart">${chart}</div></section>
+    <section class="card stack" style="gap:8px"><h2 style="font-size:1.15rem">Deine 10 schwächsten Karten</h2>
+      ${weak.length ? `<ol class="weak">${weak.map(c => { const s = S.cards[c]; return `<li data-kat="${ITEM[c].kat}"><i class="dot"></i><span class="nm">${esc(kartenName(c))}</span><span class="ct">${s.r} ✓ · ${s.f} ✗</span></li>`; }).join('')}</ol><button class="btn wide" id="weakGo" data-kat="mix">Meine Schwächen üben</button>` : '<p class="muted" style="margin:0">Noch keine schwachen Karten. Spiel ein paar Runden, dann erscheinen sie hier.</p>'}
+    </section>
+    <section class="card stack" style="gap:10px"><h2 style="font-size:1.15rem">Rekorde</h2>
+      <div class="muted">Zeitrennen: <strong style="color:var(--ink)">${S.best.rennen}</strong> · Längste Serie: <strong style="color:var(--ink)">${S.best.serie}</strong> · Beste Prüfungsnote: <strong style="color:var(--ink)">${S.best.pruefung || '–'}</strong></div></section>
+    <section id="resetBox"><button class="btn ghost" id="reset">Statistik zurücksetzen …</button></section>
+  </div>`;
+  const wg = document.getElementById('weakGo'); if (wg) wg.onclick = () => nav(schwaechenUeben);
+  document.getElementById('reset').onclick = () => {
+    document.getElementById('resetBox').innerHTML = `<div class="card confirm stack" style="gap:10px"><b>Wirklich alles löschen?</b><span class="small">Statistik, Punkte, Rekorde und Abzeichen werden gelöscht. Das lässt sich nicht rückgängig machen.</span><div class="row"><button class="btn danger" id="yes" style="flex:1">Ja, alles löschen</button><button class="btn sec" id="no" style="flex:1">Abbrechen</button></div></div>`;
+    document.getElementById('no').onclick = () => nav(statistik, 'statistik');
+    document.getElementById('yes').onclick = () => { S = leer(); save(); toast('Statistik wurde zurückgesetzt.'); nav(statistik, 'statistik'); };
+  };
+}
+
+/* ================= Abzeichen ================= */
+function abzeichen(){
+  const n = ABZ.filter(a => S.abz[a.id]).length;
+  app.innerHTML = `<div class="stack"><h1 style="font-size:1.8rem">Abzeichen</h1><p class="muted" style="margin:0">${n} von ${ABZ.length} gesammelt · ${fmt(S.punkte)} Punkte · ${S.runden} Runden gespielt</p>
+    <div class="badges">${ABZ.map((a, i) => `<div class="badge ${S.abz[a.id] ? '' : 'locked'}">${medal(i)}<b>${a.name}</b><span>${a.text}</span>${S.abz[a.id] ? `<span class="small">Erhalten am ${new Date(S.abz[a.id]).toLocaleDateString('de-DE')}</span>` : ''}</div>`).join('')}</div></div>`;
+}
+
+updPunkte();
+home();
+</script>
