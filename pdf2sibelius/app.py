@@ -23,6 +23,7 @@ from flask import (
     send_from_directory,
 )
 
+import instruments
 import pipeline
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -117,12 +118,15 @@ def convert(job_id: str):
             final_path, warnings = pipeline.convert(
                 pdf_path, included_pages, job_dir, log_callback=log_callback
             )
+            parts = pipeline.list_parts(final_path)
             with _LOCK:
                 JOBS[job_id].update(
-                    status="done",
-                    download_ready=True,
+                    status="awaiting_instruments",
+                    intermediate_path=str(final_path),
                     result_path=str(final_path),
+                    download_ready=True,
                     warnings=warnings,
+                    parts=[{"index": p.index, "current_name": p.current_name} for p in parts],
                 )
         except pipeline.PipelineError as exc:
             with _LOCK:
@@ -148,8 +152,58 @@ def status(job_id: str):
                 "error": job.get("error"),
                 "download_ready": job.get("download_ready", False),
                 "warnings": job.get("warnings", []),
+                "parts": job.get("parts", []),
             }
         )
+
+
+@app.get("/instrument-options")
+def instrument_options():
+    return jsonify(
+        [
+            {"key": key, "label": t.label}
+            for key, t in instruments.TRANSPOSITIONS.items()
+        ]
+    )
+
+
+@app.post("/assign/<job_id>")
+def assign(job_id: str):
+    with _LOCK:
+        job = JOBS.get(job_id)
+    if not job or not job.get("intermediate_path"):
+        return jsonify({"error": "Kein Zwischenergebnis fuer diesen Auftrag vorhanden."}), 404
+
+    data = request.get_json(force=True)
+    raw_assignments = data.get("assignments", [])
+
+    assignments = []
+    for a in raw_assignments:
+        key = a.get("transposition_key", "concert_pitch")
+        if key not in instruments.TRANSPOSITIONS:
+            return jsonify({"error": f"Unbekannte Instrument-Transposition: {key}"}), 400
+        name = (a.get("name") or "").strip()
+        if not name:
+            continue
+        assignments.append(
+            instruments.PartAssignment(
+                part_index=int(a["index"]), instrument_name=name, transposition_key=key
+            )
+        )
+
+    job_dir = _job_dir(job_id)
+    final_path = job_dir / "ergebnis_final.mxl"
+    try:
+        pipeline.apply_instrument_assignments(
+            Path(job["intermediate_path"]), assignments, final_path
+        )
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"error": f"Instrumentenzuweisung fehlgeschlagen: {exc}"}), 500
+
+    with _LOCK:
+        JOBS[job_id].update(status="done", result_path=str(final_path), download_ready=True)
+
+    return jsonify({"status": "done"})
 
 
 @app.get("/download/<job_id>")

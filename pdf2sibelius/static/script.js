@@ -111,21 +111,116 @@ async function pollStatus() {
     clearInterval(pollTimer);
     el("convert-error").textContent = data.error;
     show("convert-error", true);
-  } else if (data.status === "done" && data.download_ready) {
+  } else if (data.status === "awaiting_instruments") {
     clearInterval(pollTimer);
-    el("download-link").href = `/download/${jobId}`;
-    if (data.warnings && data.warnings.length) {
-      el("warnings-list").innerHTML = data.warnings
-        .slice(0, 20)
-        .map((w) => `<li>${escapeHtml(w)}</li>`)
-        .join("");
-      show("warnings-box", true);
-    } else {
-      show("warnings-box", false);
-    }
-    show("step-done", true);
-    el("step-done").scrollIntoView({ behavior: "smooth" });
+    lastWarnings = data.warnings || [];
+    await showInstrumentStep(data.parts || []);
   }
+}
+
+let lastWarnings = [];
+let instrumentOptions = [];
+
+async function showInstrumentStep(parts) {
+  if (instrumentOptions.length === 0) {
+    const res = await fetch("/instrument-options");
+    instrumentOptions = await res.json();
+  }
+
+  const table = el("instrument-table");
+  table.innerHTML = "";
+  for (const part of parts) {
+    const num = document.createElement("div");
+    num.className = "row-num";
+    num.textContent = part.index;
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.value = "";
+    nameInput.placeholder = `z.B. "1. B-Klarinette"`;
+    nameInput.dataset.index = part.index;
+    nameInput.className = "part-name-input";
+
+    const select = document.createElement("select");
+    select.dataset.index = part.index;
+    select.className = "part-transposition-select";
+    const noneOpt = document.createElement("option");
+    noneOpt.value = "";
+    noneOpt.textContent = "— nicht zuweisen —";
+    select.appendChild(noneOpt);
+    for (const opt of instrumentOptions) {
+      const o = document.createElement("option");
+      o.value = opt.key;
+      o.textContent = opt.label;
+      select.appendChild(o);
+    }
+    select.addEventListener("change", () => {
+      if (select.value && !nameInput.value) {
+        const label = instrumentOptions.find((o) => o.key === select.value);
+        nameInput.value = label ? label.label : "";
+      }
+    });
+
+    table.appendChild(num);
+    table.appendChild(nameInput);
+    table.appendChild(select);
+  }
+
+  show("step-instruments", true);
+  el("step-instruments").scrollIntoView({ behavior: "smooth" });
+}
+
+el("assign-btn").addEventListener("click", async () => {
+  show("assign-error", false);
+  const rows = [...document.querySelectorAll(".part-transposition-select")];
+  const assignments = rows
+    .map((select) => {
+      const index = select.dataset.index;
+      const nameInput = document.querySelector(`.part-name-input[data-index="${index}"]`);
+      return {
+        index: parseInt(index, 10),
+        transposition_key: select.value || "concert_pitch",
+        name: nameInput.value,
+      };
+    })
+    .filter((a) => a.name && a.name.trim().length > 0);
+
+  await submitAssignments(assignments);
+});
+
+el("skip-instruments-btn").addEventListener("click", async () => {
+  await submitAssignments([]);
+});
+
+async function submitAssignments(assignments) {
+  const res = await fetch(`/assign/${jobId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assignments }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    el("assign-error").textContent = data.error || "Fehler bei der Instrumentenzuweisung.";
+    show("assign-error", true);
+    return;
+  }
+  finishUp();
+}
+
+function finishUp() {
+  show("step-instruments", false);
+  el("download-link").href = `/download/${jobId}`;
+  if (lastWarnings.length) {
+    el("warnings-list").innerHTML = lastWarnings
+      .slice(0, 20)
+      .map((w) => `<li>${escapeHtml(w)}</li>`)
+      .join("");
+    show("warnings-box", true);
+  } else {
+    show("warnings-box", false);
+  }
+  show("step-done", true);
+  el("step-done").scrollIntoView({ behavior: "smooth" });
 }
 
 el("restart-btn").addEventListener("click", () => {

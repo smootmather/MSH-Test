@@ -18,9 +18,12 @@ import re
 import shutil
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
+
+import instruments
 
 
 class PipelineError(RuntimeError):
@@ -189,6 +192,26 @@ def _collect_warnings(log_path: Path) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# .mxl (komprimiertes MusicXML) ein-/auspacken
+# ---------------------------------------------------------------------------
+
+def _find_score_xml(extracted_dir: Path) -> Path:
+    xml_candidates = list(extracted_dir.glob("*.xml")) + list(extracted_dir.glob("**/score.xml"))
+    xml_candidates = [p for p in xml_candidates if "META-INF" not in str(p)]
+    if not xml_candidates:
+        raise PipelineError("Keine score.xml im MusicXML-Container gefunden.")
+    return xml_candidates[0]
+
+
+def _rezip(extracted_dir: Path, out_path: Path) -> None:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as zf_out:
+        for file in extracted_dir.rglob("*"):
+            if file.is_file():
+                zf_out.write(file, file.relative_to(extracted_dir))
+
+
+# ---------------------------------------------------------------------------
 # MusicXML-Versionsfix (fuer Sibelius-Kompatibilitaet)
 # ---------------------------------------------------------------------------
 
@@ -205,11 +228,7 @@ def fix_musicxml_version(mxl_path: Path, fixed_path: Path) -> bool:
         with zipfile.ZipFile(mxl_path) as zf:
             zf.extractall(tmp_dir)
 
-        xml_candidates = list(tmp_dir.glob("*.xml")) + list(tmp_dir.glob("**/score.xml"))
-        xml_candidates = [p for p in xml_candidates if "META-INF" not in str(p)]
-        if not xml_candidates:
-            raise PipelineError("Keine score.xml im MusicXML-Container gefunden.")
-        xml_path = xml_candidates[0]
+        xml_path = _find_score_xml(tmp_dir)
 
         content = xml_path.read_text(encoding="utf-8")
         patched = _BAD_VERSION_RE.sub("MusicXML 4.0", content)
@@ -217,13 +236,60 @@ def fix_musicxml_version(mxl_path: Path, fixed_path: Path) -> bool:
         changed = patched != content
         xml_path.write_text(patched, encoding="utf-8")
 
-        fixed_path.parent.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(fixed_path, "w", zipfile.ZIP_DEFLATED) as zf_out:
-            for file in tmp_dir.rglob("*"):
-                if file.is_file():
-                    zf_out.write(file, file.relative_to(tmp_dir))
+        _rezip(tmp_dir, fixed_path)
 
     return changed
+
+
+# ---------------------------------------------------------------------------
+# Transponierende Instrumente zuweisen (fuer korrekte Sibelius-Transposition)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PartInfo:
+    index: int  # 1-basiert
+    current_name: str
+
+
+def list_parts(mxl_path: Path) -> list[PartInfo]:
+    """Liest die Stimmen (Parts) einer .mxl-Datei aus, damit der Nutzer
+    jeder Stimme ein Instrument zuweisen kann."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        with zipfile.ZipFile(mxl_path) as zf:
+            zf.extractall(tmp_dir)
+        xml_path = _find_score_xml(tmp_dir)
+
+        tree = ET.parse(xml_path)
+        root = tree.getroot()
+        part_list = root.find("part-list")
+        if part_list is None:
+            return []
+
+        parts = []
+        for i, score_part in enumerate(part_list.findall("score-part"), start=1):
+            name_el = score_part.find("part-name")
+            name = name_el.text if name_el is not None and name_el.text else f"Stimme {i}"
+            parts.append(PartInfo(index=i, current_name=name))
+        return parts
+
+
+def apply_instrument_assignments(
+    mxl_path: Path,
+    assignments: list[instruments.PartAssignment],
+    out_path: Path,
+) -> None:
+    """Traegt Instrumentnamen und Transposition in eine .mxl-Datei ein
+    (siehe instruments.py) und schreibt das Ergebnis als neue .mxl-Datei."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        with zipfile.ZipFile(mxl_path) as zf:
+            zf.extractall(tmp_dir)
+        xml_path = _find_score_xml(tmp_dir)
+
+        instruments.apply_instrument_assignments(xml_path, assignments)
+
+        _rezip(tmp_dir, out_path)
 
 
 # ---------------------------------------------------------------------------

@@ -54,7 +54,29 @@ Dann im Browser öffnen: <http://127.0.0.1:5000>
    (Seite 1 ist standardmäßig vorab abgewählt, da meist ein Titelblatt.)
 3. "Umwandlung starten" klicken und den Fortschritt im Log verfolgen
    (bei größeren Partituren mehrere Minuten).
-4. Ergebnis herunterladen und in Sibelius öffnen.
+4. **Instrumente zuweisen** (bei transponierenden Instrumenten wichtig,
+   siehe unten): Für jede erkannte Notenzeile ein Instrument auswählen
+   (z.B. "Klarinette in B", "Horn in F") und optional den Namen anpassen.
+   Wer das überspringt, bekommt die Stimmen unbenannt und nicht
+   transponiert (wie bisher) zurück.
+5. Ergebnis herunterladen und in Sibelius öffnen.
+
+### Warum die Instrumentenzuweisung wichtig ist
+
+Bei transponierenden Instrumenten (B-Klarinette, Es-Altsaxophon, Horn in F, ...)
+stehen in der gedruckten Partitur die *geschriebenen* Töne, nicht die
+klingenden. Audiveris liest diese geschriebenen Töne korrekt ein, trägt aber
+keine Transpositions-Information in die MusicXML-Datei ein (da es den
+Instrumentennamen nicht zuverlässig erkennt). Ohne diese Information
+behandelt Sibelius die Töne fälschlich als klingende (Konzert-)Töne – das
+Ergebnis klingt bei der Wiedergabe falsch und die Transponierte-Partitur-/
+Klingende-Partitur-Umschaltung funktioniert nicht richtig.
+
+Die App trägt die passende `<transpose>`-Information nachträglich in die
+Datei ein, **ohne die bereits erkannten Notenwerte zu verändern** – die
+Töne bleiben exakt so stehen, wie sie gedruckt sind, Sibelius weiß nur
+zusätzlich, wie sie zu interpretieren sind. Welches Instrument zu welcher
+Notenzeile gehört, steht links neben jedem System im Original-PDF.
 
 ## Grenzen der Noten-Erkennung (OMR)
 

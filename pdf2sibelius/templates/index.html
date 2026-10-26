@@ -35,6 +35,24 @@
       <p id="convert-error" class="error" hidden></p>
     </section>
 
+    <section id="step-instruments" class="card" hidden>
+      <h2>4. Instrumente zuweisen (optional, aber empfohlen)</h2>
+      <p class="hint">
+        Bei transponierenden Instrumenten (B-Klarinette, Es-Altsaxophon, Horn in F, ...)
+        stehen in der Partitur die geschriebenen (transponierten) Töne. Damit Sibelius
+        beim Import weiß, wie es diese Töne interpretieren muss (korrekte Klangfarbe,
+        korrekte klingende Tonhöhe), hier pro Notenzeile das passende Instrument wählen
+        &ndash; Reihenfolge entspricht der Partitur von oben nach unten.
+        Ohne Zuweisung bleiben die Stimmen unbenannt und nicht-transponierend.
+      </p>
+      <div id="instrument-table"></div>
+      <div class="btn-row">
+        <button id="assign-btn">Zuweisung anwenden</button>
+        <button id="skip-instruments-btn" class="secondary">Überspringen</button>
+      </div>
+      <p id="assign-error" class="error" hidden></p>
+    </section>
+
     <section id="step-done" class="card" hidden>
       <h2>4. Fertig</h2>
       <p>Die MusicXML-Datei ist bereit. In Sibelius &uuml;ber
