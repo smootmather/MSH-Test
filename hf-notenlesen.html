@@ -28,7 +28,7 @@ button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:none;box-shadow:var(--focus);border-radius:12px}
 
 /* ---------- Kopfzeile ---------- */
-header.top{position:sticky;top:0;z-index:20;background:rgba(246,244,251,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(246,244,251,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .top-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
 .brand{display:flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;padding:6px;font-weight:800;font-size:1.1rem;color:var(--lav-strong)}
 .brand-mark{width:30px;height:30px;border-radius:10px;background:var(--lav);display:grid;place-items:center;font-size:18px}
@@ -1500,7 +1500,11 @@ function bind() {
     if (e.target.closest('#res-next')) { startRound('level', { level: G.lastRound.extra.level + 1 }); return; }
     if (e.target.closest('#res-home')) { goHome(); return; }
     if (e.target.closest('#test-cheer')) { Sfx.ensure(); confetti(); if (S().sound) { Sfx.fanfare(); Sfx.applause(); if (S().speech) Voice.master(); } return; }
-    if (e.target.closest('#reset-all')) { if (confirm('Wirklich alle Einstellungen, Tokens, Rekorde und Statistiken löschen?')) { Store.reset(); $('#hdr-tokens').textContent = '0'; applyMotion(); updateSoundBtn(); renderSettings(); } return; }
+    const rb = e.target.closest('#reset-all');
+    if (rb) {
+      if (rb.dataset.armed !== '1') { rb.dataset.armed = '1'; rb.textContent = '⚠️ Wirklich alles löschen? Nochmal tippen'; setTimeout(() => { if (document.contains(rb)) { rb.dataset.armed = ''; rb.textContent = '🗑️ Alles zurücksetzen'; } }, 4000); return; }
+      Store.reset(); $('#hdr-tokens').textContent = '0'; applyMotion(); updateSoundBtn(); renderSettings(); return;
+    }
   });
   $('#settings-body').addEventListener('change', onSettingsChange);
 
