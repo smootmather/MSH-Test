@@ -528,6 +528,22 @@
   .prime-chip{ font-size:1.3rem; padding:16px 0; }
 
   .worksheet-hint{ text-align:center; color:#6B7280; font-weight:600; font-size:0.85rem; margin-top:12px; }
+  .word-problem-text{
+    font-size:1.02rem;
+    line-height:1.6;
+    color:#312E81;
+    font-weight:600;
+    text-align:left;
+    padding:4px 2px;
+  }
+  .formula-display{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(1.5rem, 8vw, 2.3rem);
+    color:#312E81;
+    text-align:center;
+    margin:6px 0 10px;
+  }
 
   /* --- Sequential answer parts (keypad/choice-driven, no separate Prüfen) --- */
   .mini-input-display{
@@ -686,6 +702,20 @@
           <span class="menu-card-text">
             <span class="menu-card-title">Primzahlen</span>
             <span class="menu-card-desc">Erkennen &amp; zerlegen</span>
+          </span>
+        </button>
+        <button class="menu-card" id="menuCard-ggtkgv">
+          <span class="menu-card-icon">🔗</span>
+          <span class="menu-card-text">
+            <span class="menu-card-title">ggT &amp; kgV</span>
+            <span class="menu-card-desc">Teiler &amp; Vielfache kombinieren</span>
+          </span>
+        </button>
+        <button class="menu-card" id="menuCard-textaufgaben">
+          <span class="menu-card-icon">📖</span>
+          <span class="menu-card-text">
+            <span class="menu-card-title">Textaufgaben</span>
+            <span class="menu-card-desc">Teiler &amp; Vielfache im Alltag</span>
           </span>
         </button>
       </div>
@@ -1537,6 +1567,112 @@
     };
   }
 
+  // ----- ggT & kgV generators -----
+  function gcdOf(a,b){ while(b){ const t = b; b = a % b; a = t; } return a; }
+  function lcmOf(a,b){ return (a*b) / gcdOf(a,b); }
+
+  function genGgtCompute(){
+    let a,b;
+    do{ a = randInt(4,40); b = randInt(4,40); } while(a===b || lcmOf(a,b) > 400);
+    return {
+      subtype:'ggtCompute', subtypeLabel:'ggT bestimmen', context:{ a, b, kind:'ggT' },
+      parts:[{ kind:'number', expected: gcdOf(a,b) }], partIndex:0, partResults:[]
+    };
+  }
+  function genKgvCompute(){
+    let a,b;
+    do{ a = randInt(4,40); b = randInt(4,40); } while(a===b || lcmOf(a,b) > 400);
+    return {
+      subtype:'kgvCompute', subtypeLabel:'kgV bestimmen', context:{ a, b, kind:'kgV' },
+      parts:[{ kind:'number', expected: lcmOf(a,b) }], partIndex:0, partResults:[]
+    };
+  }
+  function genGgtKgvCheck(){
+    let a,b;
+    do{ a = randInt(4,40); b = randInt(4,40); } while(a===b || lcmOf(a,b) > 400);
+    const isGgt = Math.random() < 0.5;
+    const correct = isGgt ? gcdOf(a,b) : lcmOf(a,b);
+    let shown;
+    if(Math.random() < 0.5){
+      shown = correct;
+    } else if(isGgt){
+      const divsA = getDivisors(a), divsB = getDivisors(b);
+      const common = divsA.filter(function(d){ return divsB.indexOf(d) !== -1 && d !== correct; });
+      shown = common.length ? common[randInt(0, common.length-1)] : a*b;
+    } else {
+      shown = correct * randInt(2,3);
+    }
+    const label = isGgt ? 'ggT' : 'kgV';
+    return {
+      subtype:'ggtKgvCheck', subtypeLabel: label+'-Check',
+      context:{ a, b, shown, kind: isGgt ? 'ggt' : 'kgv' },
+      parts:[{ kind:'choice', options:[{label:'✅ Ja',val:'yes'},{label:'❌ Nein',val:'no'}], expected: (shown===correct) ? 'yes' : 'no' }],
+      partIndex:0, partResults:[]
+    };
+  }
+
+  // ----- Textaufgaben generators (Teiler/Vielfache/ggT/kgV as word problems) -----
+  function genWpGgt(){
+    let a,b;
+    do{ a = randInt(12,60); b = randInt(12,60); } while(a===b || gcdOf(a,b) === 1);
+    const colors = ['roten','blauen','gelben','grünen'];
+    const c1 = randInt(0, colors.length-1);
+    let c2; do{ c2 = randInt(0, colors.length-1); } while(c2 === c1);
+    const text = 'Mia hat '+a+' '+colors[c1]+' und '+b+' '+colors[c2]+' Perlen. Sie möchte Ketten auffädeln, bei denen jede Kette gleich viele '+colors[c1]+' und gleich viele '+colors[c2]+' Perlen hat – ohne dass eine Perle übrig bleibt. Wie viele Ketten kann sie höchstens machen?';
+    return {
+      subtype:'wpGgt', subtypeLabel:'ggT-Aufgabe', context:{ text },
+      parts:[{ kind:'number', expected: gcdOf(a,b) }], partIndex:0, partResults:[]
+    };
+  }
+  function genWpKgv(){
+    let a,b;
+    do{ a = randInt(3,15); b = randInt(3,15); } while(a===b || lcmOf(a,b) > 150);
+    const text = 'Bus A fährt alle '+a+' Minuten vom Bahnhof ab, Bus B alle '+b+' Minuten. Um 8:00 Uhr fahren beide gleichzeitig los. Nach wie vielen Minuten fahren sie zum ersten Mal wieder gleichzeitig ab?';
+    return {
+      subtype:'wpKgv', subtypeLabel:'kgV-Aufgabe', context:{ text },
+      parts:[{ kind:'number', expected: lcmOf(a,b) }], partIndex:0, partResults:[]
+    };
+  }
+  function genWpTeilerCheck(){
+    const n = randInt(12,60);
+    const divs = getDivisors(n).filter(function(d){ return d>1 && d<n; });
+    let k, answerYes;
+    if(divs.length && Math.random() < 0.5){
+      k = divs[randInt(0, divs.length-1)];
+      answerYes = true;
+    } else {
+      do{ k = randInt(2, Math.floor(n/2)+2); } while(n % k === 0);
+      answerYes = false;
+    }
+    const items = ['Schüler','Bonbons','Karten','Murmeln','Sticker'];
+    const groups = ['Gruppen','Tüten','Teams','Boxen','Reihen'];
+    const item = items[randInt(0, items.length-1)];
+    const group = groups[randInt(0, groups.length-1)];
+    const text = n+' '+item+' sollen in '+group+' zu je '+k+' Stück aufgeteilt werden. Geht das auf, ohne dass etwas übrig bleibt?';
+    return {
+      subtype:'wpTeilerCheck', subtypeLabel:'Verteilungs-Aufgabe', context:{ text },
+      parts:[{ kind:'choice', options:[{label:'✅ Ja',val:'yes'},{label:'❌ Nein',val:'no'}], expected: answerYes ? 'yes' : 'no' }],
+      partIndex:0, partResults:[]
+    };
+  }
+  function genWpVielfachesCheck(){
+    const step = randInt(3,12);
+    let k, isMultiple;
+    if(Math.random() < 0.5){
+      k = step * randInt(2,10);
+      isMultiple = true;
+    } else {
+      k = step * randInt(2,10) + randInt(1, step-1);
+      isMultiple = false;
+    }
+    const text = 'Ein Muster markiert jedes '+step+'. Kästchen (also Kästchen '+step+', '+(2*step)+', '+(3*step)+', ...). Ist Kästchen Nummer '+k+' markiert?';
+    return {
+      subtype:'wpVielfachesCheck', subtypeLabel:'Vielfachen-Aufgabe', context:{ text },
+      parts:[{ kind:'choice', options:[{label:'✅ Ja',val:'yes'},{label:'❌ Nein',val:'no'}], expected: isMultiple ? 'yes' : 'no' }],
+      partIndex:0, partResults:[]
+    };
+  }
+
   const TOPICS = {
     teilbarkeit: {
       label:'➗ Teilbarkeit', subtitle:'Übungen wie auf dem Arbeitsblatt',
@@ -1549,6 +1685,18 @@
       statsKey:'einmaleins_blitz_primzahlen_stats_v1',
       subtypeLabels:{ isprime:'Primzahl erkennen', grid:'Primzahlen finden', factorize:'Primfaktorzerlegung' },
       generate(){ return [genIsPrime, genPrimeGrid, genFactorize][randInt(0,2)](); }
+    },
+    ggtkgv: {
+      label:'🔗 ggT & kgV', subtitle:'Teiler & Vielfache kombinieren',
+      statsKey:'einmaleins_blitz_ggtkgv_stats_v1',
+      subtypeLabels:{ ggtCompute:'ggT bestimmen', kgvCompute:'kgV bestimmen', ggtKgvCheck:'ggT/kgV-Check' },
+      generate(){ return [genGgtCompute, genKgvCompute, genGgtKgvCheck][randInt(0,2)](); }
+    },
+    textaufgaben: {
+      label:'📖 Textaufgaben', subtitle:'Teiler & Vielfache im Alltag',
+      statsKey:'einmaleins_blitz_textaufgaben_stats_v1',
+      subtypeLabels:{ wpGgt:'ggT-Aufgabe', wpKgv:'kgV-Aufgabe', wpTeilerCheck:'Verteilungs-Aufgabe', wpVielfachesCheck:'Vielfachen-Aufgabe' },
+      generate(){ return [genWpGgt, genWpKgv, genWpTeilerCheck, genWpVielfachesCheck][randInt(0,3)](); }
     }
   };
 
@@ -1658,6 +1806,19 @@
       const hint = current !== undefined ? ('Ist <strong>'+current+'</strong> eine Primzahl?') : '';
       worksheetBox.innerHTML = '<div class="prime-grid">'+chips+'</div><div class="worksheet-hint">'+hint+'</div>';
     }
+    else if(q.subtype === 'ggtCompute' || q.subtype === 'kgvCompute'){
+      worksheetBox.innerHTML =
+        '<div class="formula-display">'+q.context.kind+'('+q.context.a+', '+q.context.b+')</div>'
+        + '<div class="worksheet-hint">= ?</div>';
+    }
+    else if(q.subtype === 'ggtKgvCheck'){
+      const label = q.context.kind === 'ggt' ? 'ggT' : 'kgV';
+      worksheetBox.innerHTML =
+        '<div class="word-problem-text" style="text-align:center;">Ist <strong>'+q.context.shown+'</strong> der '+label+' von <strong>'+q.context.a+'</strong> und <strong>'+q.context.b+'</strong>?</div>';
+    }
+    else if(q.subtype === 'wpGgt' || q.subtype === 'wpKgv' || q.subtype === 'wpTeilerCheck' || q.subtype === 'wpVielfachesCheck'){
+      worksheetBox.innerHTML = '<div class="word-problem-text">'+q.context.text+'</div>';
+    }
   }
 
   function renderPartControls(q){
@@ -1765,6 +1926,8 @@
   }
   document.getElementById('menuCard-teilbarkeit').addEventListener('click', function(){ openTopic('teilbarkeit'); });
   document.getElementById('menuCard-primzahlen').addEventListener('click', function(){ openTopic('primzahlen'); });
+  document.getElementById('menuCard-ggtkgv').addEventListener('click', function(){ openTopic('ggtkgv'); });
+  document.getElementById('menuCard-textaufgaben').addEventListener('click', function(){ openTopic('textaufgaben'); });
   document.getElementById('backFromTopicStart').addEventListener('click', goToMainMenu);
   document.getElementById('topicMenuBtn').addEventListener('click', goToMainMenu);
   document.getElementById('topicStatsBackBtn').addEventListener('click', function(){ showScreen('topicStart'); });
